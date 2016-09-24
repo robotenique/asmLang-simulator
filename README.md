@@ -1,29 +1,13 @@
-# README #
+# README PROJETO MAC216 #
 
-This README would normally document whatever steps are necessary to get your application up and running.
 
 ### What is this repository for? ###
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+* Contains the source code of the project
+* Version 0.0
 
 ### How do I get set up? ###
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
-
-### Contribution guidelines ###
-
-* Writing tests
-* Code review
-* Other guidelines
-
-### Who do I talk to? ###
-
-* Repo owner or admin
-* Other community or team contact
+* Install git if you haven't (sudo apt-get install git)
+* Go to a folder (preferably "Documents")
+* Clone the rep with "$ git clone https://Robotenique@bitbucket.org/Robotenique/projetomac216.git"
