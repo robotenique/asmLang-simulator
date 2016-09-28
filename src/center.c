@@ -19,15 +19,16 @@ int main(int argc, char const *argv[]) {
 
 
     // Input verification
-    if (argc != 4);
-        //ERROR
-    if ((col = atoi(argv[3])));
-        //ERROR
+    if (argc != 4)
+        die("Wrong number of arguments, aborting...");
+
+    if (!(col = atoi(argv[3])))
+       die("Can't process the column input, aborting...");
 
     input = fopen(argv[1],"r");
-    output = fopen(argv[2],"w");
-    if (input == NULL);
-        //ERROR
+    output = fopen(argv[2],"a");
+    if (input == NULL || output == NULL)
+       die("Error opening files, aborting...");
 
     while(read_line(input,B)) {
         int i, j;
@@ -36,11 +37,13 @@ int main(int argc, char const *argv[]) {
         nLine++;
         for (i = 0;isspace(B->data[i]) && B->data[i]!=0; i++);
         for (j =(B->i) - 2;isspace(B->data[j]) && j >= i; j--);
-        if(i == (B-> i)- 1)
+        if(i == (B-> i)- 2)
             printf("%s",B->data);
-        else if((j - i + 1) > col)
+        else if((j - i + 1) > col) {
             for (int p = i; p <= j; fprintf(output, "%c",B->data[p]), p++);
-            //ERROR (print nLine + "line too long") (IN THE STDERR)
+            print_error_msg("line %d: Line too long\n", nLine);
+        }
+
         else centralizeLine(B, col, i, j, output);
     }
     return(0);
