@@ -24,6 +24,7 @@ int hash(char* c){
 		else if(c[i] >= 'a' && c[i] <= 'z') res = (res + (c[i]-'a'+37)*po(70, i)) % p;
 		else if(c[i] == '-') res = (res + (c[i]-'-'+63)*po(70, i)) % p;
 		else if(c[i] == '_') res = (res + (c[i]-'_'+64)*po(70, i)) % p;
+		else if(c[i] == '.') res = (res + (c[i]-'.'+65)*po(70, i)) % p;
 	}
 
 	return res;
@@ -32,7 +33,7 @@ int hash(char* c){
 /*int main(){
 	scanf("%s", word);
 
-	int h = hash(word);	
+	int h = hash(word);
 	while(strcmp(table[h], word) == 0) h = (h + 1) % MAXTABLE;
 	strcpy(table[h], word);
 
