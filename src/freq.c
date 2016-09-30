@@ -52,7 +52,7 @@ int main(int argc, char **argv){
             int j = 0;
             while (!isspace(B->data[i]) && B->data[i] != 0 && i < (B -> i))
                 word[j++] = B->data[i++];
-//ab     c
+
             wide = max(wide, strlen(word));
 
             i++;
