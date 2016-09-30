@@ -35,10 +35,9 @@ int main(int argc, char **argv){
 
     SymbolTable st = stable_create();
 
-    //FILE* input = fopen(argv[1], "r");
-    //FILE* output = fopen(argv[2], "a");
-    FILE* input = fopen("input", "r");
-    FILE* output = fopen("output", "a");
+    FILE* input = fopen(argv[1], "r");
+    FILE* output = fopen(argv[2], "a");
+    
 
 
     if (input == NULL || output == NULL)
