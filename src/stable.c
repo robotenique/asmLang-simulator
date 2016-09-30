@@ -16,7 +16,6 @@
 #include "../include/hash.h"
 #include <stdlib.h>
 #include <string.h>
-#define dbg(x) fprintf(stderr,"%s\n",x)
 
 char hashes[10000000][50];
 int keys[10000000];
@@ -68,7 +67,6 @@ InsertionResult stable_insert(SymbolTable table, const char *key){
 	int h = hash(cpy);
 
     while (strcmp(hashes[h], key)) {
-        dbg(hashes[h]);
         if (hashes[h][0] == 0) {
             strcpy(hashes[h], key);
 
