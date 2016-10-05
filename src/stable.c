@@ -17,7 +17,6 @@
 #include "../include/error.h"
 #include <stdlib.h>
 #include <string.h>
-const int SIZE = (int) 1e7;
 
 char hashes[HASH_SIZE][50];
 int keys[HASH_SIZE];
