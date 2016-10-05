@@ -14,13 +14,17 @@
 */
 #include "../include/stable.h"
 #include "../include/hash.h"
+#include "../include/error.h"
 #include <stdlib.h>
 #include <string.h>
 
 char hashes[10000000][50];
 int keys[10000000];
 
+const int SIZE = (int) 1e7;
+
 int i = 0;
+static int qtd = 0;
 
 // The symbol table.
 typedef struct stable_s {
@@ -34,7 +38,7 @@ typedef struct stable_s {
 SymbolTable stable_create(){
     SymbolTable t = malloc(sizeof(stable_s));
 
-    (t -> symboltable) = malloc(10000000 * sizeof(EntryData));
+    (t -> symboltable) = malloc(SIZE * sizeof(EntryData));
 
 	return t;
 }
@@ -63,12 +67,15 @@ InsertionResult stable_insert(SymbolTable table, const char *key){
     ir.new = 0;
 
     char* cpy = malloc(strlen(key));
-    cpy = strcpy(cpy, key);
+    strcpy(cpy, key);
 	int h = hash(cpy);
 
     while (strcmp(hashes[h], key)) {
         if (hashes[h][0] == 0) {
+        	if (qtd == SIZE) die("Symbol Table is already full.");
+
             strcpy(hashes[h], key);
+            qtd++;
 
             ir.new = 1;
             ir.data = &(table -> symboltable[h]);
