@@ -1,1 +1,0 @@
-When a user presses the tab key within an interactive command-shell, Bash automatically uses command line completion to match partly typed program names, filenames and variable names. The Bash command-line completion system is very flexible and customizable, and is often packaged with functions that complete arguments and filenames for specific programs and tasks.

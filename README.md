@@ -1,13 +1,16 @@
 # README PROJETO MAC216 #
+ * @author: Juliano Garcia de Oliveira
+ * @author: Enzo Hideki Nakamura
 
+Para rodar o programa:
+- make center
+ou
+- make freq
 
-### What is this repository for? ###
+e depois rodar ./center <input> <output> <col> ou
+	       ./freq  <input> <output>
 
-* Contains the source code of the project
-* Version 0.0
+onde <input> e <output> são os nomes dos arquivos de entrada e saída, respectivamente;
+e <col> é o número de colunas para centralizar o texto.
 
-### How do I get set up? ###
-
-* Install git if you haven't (**sudo apt-get install git**)
-* Go to a folder (preferably "Documents")
-* Clone the rep with "**$ git clone https://Robotenique@bitbucket.org/Robotenique/projetomac216.git**"
+Usar '$ make clean' para remover os arquivos binários / objetos.
