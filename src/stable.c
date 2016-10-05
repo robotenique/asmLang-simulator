@@ -18,8 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-char hashes[HASH_SIZE][50];
-int keys[HASH_SIZE];
+static char hashes[HASH_SIZE][50];
+static int keys[HASH_SIZE];
 
 
 int i = 0;
