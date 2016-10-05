@@ -17,11 +17,11 @@
 #include "../include/error.h"
 #include <stdlib.h>
 #include <string.h>
-
-char hashes[10000000][50];
-int keys[10000000];
-
 const int SIZE = (int) 1e7;
+
+char hashes[HASH_SIZE][50];
+int keys[HASH_SIZE];
+
 
 int i = 0;
 static int qtd = 0;
@@ -36,9 +36,8 @@ typedef struct stable_s {
   Return a new symbol table.
 */
 SymbolTable stable_create(){
-    SymbolTable t = malloc(sizeof(stable_s));
-
-    (t -> symboltable) = malloc(SIZE * sizeof(EntryData));
+    SymbolTable t = emalloc(sizeof(stable_s));
+    (t -> symboltable) = emalloc(HASH_SIZE * sizeof(EntryData));
 
 	return t;
 }
@@ -48,6 +47,7 @@ SymbolTable stable_create(){
 */
 void stable_destroy(SymbolTable table){
 	free(table -> symboltable);
+    free(table);
 }
 
 /*
@@ -66,13 +66,13 @@ InsertionResult stable_insert(SymbolTable table, const char *key){
 
     ir.new = 0;
 
-    char* cpy = malloc(strlen(key));
+    char* cpy = emalloc(strlen(key));
     strcpy(cpy, key);
 	int h = hash(cpy);
 
     while (strcmp(hashes[h], key)) {
         if (hashes[h][0] == 0) {
-        	if (qtd == SIZE) die("Symbol Table is already full.");
+        	if (qtd == HASH_SIZE) die("Symbol Table is already full.");
 
             strcpy(hashes[h], key);
             qtd++;
@@ -85,7 +85,7 @@ InsertionResult stable_insert(SymbolTable table, const char *key){
             return ir;
         }
 
-        h = (h + 1) % MAXTABLE;
+        h = (h + 1) % HASH_SIZE;
     }
 
     ir.data = &(table -> symboltable[h]);
@@ -100,7 +100,7 @@ InsertionResult stable_insert(SymbolTable table, const char *key){
   NULL pointer if the key is not found.
 */
 EntryData *stable_find(SymbolTable table, const char *key) {
-    char* cpy = malloc(strlen(key));
+    char* cpy = emalloc(strlen(key));
     cpy = strcpy(cpy, key);
     int h = hash(cpy);
 
@@ -111,7 +111,7 @@ EntryData *stable_find(SymbolTable table, const char *key) {
             return NULL;
         // se a hash estiver associada com alguma coisa
         } else {
-            while (strcmp(hashes[h], key)) h = (h + 1) % MAXTABLE;
+            while (strcmp(hashes[h], key)) h = (h + 1) % HASH_SIZE;
 
             ed = &(table -> symboltable[h]);
         }

@@ -1,10 +1,16 @@
+/*
+ * @author: Juliano Garcia de Oliveira
+ * @author: Enzo Hideki Nakamura
+ *
+ * MAC0216
+ *
+ * Hash Implementation
+ */
 #include <stdio.h>
 #include <string.h>
-
-const int MAXTABLE = 1e7;
-
+#include "../include/hash.h"
 char word[50];
-char table[10000000][50];
+char table[HASH_SIZE][50];
 int p = 1e7 - 9;
 
 long long po(int x, int e){
@@ -29,15 +35,3 @@ int hash(char* c){
 
 	return res;
 }
-
-/*int main(){
-	scanf("%s", word);
-
-	int h = hash(word);
-	while(strcmp(table[h], word) == 0) h = (h + 1) % MAXTABLE;
-	strcpy(table[h], word);
-
-	printf("%d\n", h);
-
-	return 0;
-}*/

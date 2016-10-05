@@ -8,8 +8,7 @@
 #define __HASH_H__
 
 #include <stdio.h>
-
-extern int MAXTABLE;
+#define HASH_SIZE 10000000
 
 // Returns the result of hashing given a c-string
 int hash(char* c);

@@ -1,3 +1,11 @@
+/*
+ * @author: Juliano Garcia de Oliveira
+ * @author: Enzo Hideki Nakamura
+ *
+ * MAC0216
+ *
+ * Buffer Test : Centralize text
+ */
 #include "../include/buffer.h"
 #include "../include/error.h"
 #include <ctype.h>
@@ -46,10 +54,24 @@ int main(int argc, char const *argv[]) {
 
         else centralizeLine(B, col, i, j, output);
     }
+
+    buffer_destroy(B);
     return(0);
 }
 
+/*
+ * Function: centralizeLine
+ * --------------------------------------------------------
+ *   Receives a string and column number, then print the string
+ *   centralized in the output file given.
+ * @args B: Buffer of the read line
+ *       col: Number of columns to center the line
+ *       i: Where the line begins
+ *       j: Where the line ends
+ *       output: FILE to print the centralized line
 
+ * @return
+ */
 void centralizeLine (Buffer *B, int col, int i, int j, FILE *output) {
     for (int x = 0; x < (col - (j-i+1))/2 ; fprintf(output, " "), x++);
     for (int w = i; w <= j; fprintf(output, "%c",B->data[w]) , w++);

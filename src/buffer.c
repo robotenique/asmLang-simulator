@@ -7,17 +7,19 @@
  * Buffer Implementation
  */
 #include "../include/buffer.h"
+#include "../include/error.h"
 #include <stdlib.h>
+
 
 /* REMAINDER: The 0 represents the end of a string. Remember to use the
  * buffer_push_back() function to push the 0 when finished reading the
  * desired string.
  */
  Buffer *buffer_create() {
-     Buffer *B = malloc(sizeof(Buffer));
+     Buffer *B = emalloc(sizeof(Buffer));
      B -> n = 1024;
      B -> i = 0;
-     B -> data = malloc(B -> n) ;
+     B -> data = emalloc(B -> n) ;
      return B;
  }
 
@@ -28,7 +30,7 @@
 
  void buffer_reset(Buffer *B){
     free(B -> data);
-    B -> data = malloc(B -> n);
+    B -> data = emalloc(B -> n);
     B -> i = 0;
  }
 
