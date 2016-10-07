@@ -26,12 +26,7 @@ int wide = 0, ind = 0;
 int max(int a, int b);
 int visit(const char *key, EntryData *data);
 
-int compare (const void * a, const void * b){
-  words *orderA = (words *)a;
-  words *orderB = (words *)b;
-
-  return strcmp(orderA->p, orderB->p);
-}
+int compare (const void * a, const void * b);
 
 int main(int argc, char **argv) {
     Buffer *B = buffer_create();
@@ -99,4 +94,19 @@ int visit(const char *key, EntryData *data){
     ind++;
 
     return 1;
+}
+
+/*
+ * Function: compare
+ * --------------------------------------------------------
+ *   Receives two pointers and compare them lexicographically, according to 
+ * their words.
+ * @args a: First pointer
+ *       b: Second pointer
+ * @return 	< 0, if 'a' has a word less than the word of 'b'.
+ *			> 0, if 'b' has a word less than the word of 'a'.
+ *			= 0, if 'a' has a word equal to the word of 'b'.
+ */
+int compare (const void * a, const void * b){
+  return strcmp(((words *)a)->p, ((words *)b)->p);
 }
