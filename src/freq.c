@@ -18,7 +18,7 @@ typedef struct {
     char* p;
     int freq;
 } words;
-char word[50], table[HASH_SIZE][50], seen[HASH_SIZE];
+char word[50], table[HASH_SIZE][50];
 int keys[HASH_SIZE], nwords = 0;
 words copiaSt[HASH_SIZE];
 int wide = 0, ind = 0;
@@ -70,20 +70,6 @@ int main(int argc, char **argv) {
     stable_visit(st, &visit);
 
     //Print the words in the specified format and order
-    /*for (int i=0; i<nwords; i++) {
-        int tmp = -1;
-        char aux[1] = {127}, *small = aux;
-        for (int j=0; j<nwords; j++)
-            if(copiaSt[j].p != 0 && !seen[j] && strcmp(small, copiaSt[j].p) > 0) {
-                small = copiaSt[j].p;
-                tmp = j;
-            }
-
-        int width = (int) (wide - strlen(copiaSt[tmp].p) + 1);
-        fprintf(output, "%s %*d\n", copiaSt[tmp].p, width, copiaSt[tmp].freq);
-        seen[tmp] = 1;
-    }*/
-
     qsort(copiaSt, nwords, sizeof(words), compare);
     for (int i=0; i<nwords; i++) fprintf(output, "%s %*d\n", copiaSt[i].p, (int) (wide - strlen(copiaSt[i].p) + 1), copiaSt[i].freq);
 
