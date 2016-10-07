@@ -25,7 +25,6 @@ int wide = 0, ind = 0;
 
 int max(int a, int b);
 int visit(const char *key, EntryData *data);
-
 int compare (const void * a, const void * b);
 
 int main(int argc, char **argv) {
