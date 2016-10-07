@@ -26,6 +26,12 @@ int wide = 0, ind = 0;
 int max(int a, int b);
 int visit(const char *key, EntryData *data);
 
+int compare (const void * a, const void * b){
+  words *orderA = (words *)a;
+  words *orderB = (words *)b;
+
+  return strcmp(orderA->p, orderB->p);
+}
 
 int main(int argc, char **argv) {
     Buffer *B = buffer_create();
@@ -64,7 +70,7 @@ int main(int argc, char **argv) {
     stable_visit(st, &visit);
 
     //Print the words in the specified format and order
-    for (int i=0; i<nwords; i++) {
+    /*for (int i=0; i<nwords; i++) {
         int tmp = -1;
         char aux[1] = {127}, *small = aux;
         for (int j=0; j<nwords; j++)
@@ -76,12 +82,16 @@ int main(int argc, char **argv) {
         int width = (int) (wide - strlen(copiaSt[tmp].p) + 1);
         fprintf(output, "%s %*d\n", copiaSt[tmp].p, width, copiaSt[tmp].freq);
         seen[tmp] = 1;
-    }
+    }*/
+
+    qsort(copiaSt, nwords, sizeof(words), compare);
+    for (int i=0; i<nwords; i++) fprintf(output, "%s %*d\n", copiaSt[i].p, (int) (wide - strlen(copiaSt[i].p) + 1), copiaSt[i].freq);
 
     //Destroy the data structures used
     stable_destroy(st);
     buffer_destroy(B);
     return 0;
+//
 }
 
 
