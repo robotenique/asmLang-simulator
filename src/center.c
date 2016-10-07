@@ -44,9 +44,9 @@ int main(int argc, char const *argv[]) {
         if(nLine) fprintf(output,"\n");
         nLine++;
         for (i = 0;isspace(B->data[i]) && B->data[i]!=0; i++);
-        for (j =(B->i) - 2;isspace(B->data[j]) && j >= i; j--);
-        if(i == (B-> i)- 2)
-            printf("%s",B->data);
+        for (j =(B->i) - 2;isspace(B->data[j]) && j >= i; j--);      
+        if((i+1) == (B-> i))
+          fprintf(output, "%s",B->data);
         else if((j - i + 1) > col) {
             for (int p = i; p <= j; fprintf(output, "%c",B->data[p]), p++);
             print_error_msg("line %d: Line too long\n", nLine);
