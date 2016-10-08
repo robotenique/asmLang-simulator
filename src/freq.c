@@ -35,10 +35,10 @@ int main(int argc, char **argv) {
     Buffer *B = buffer_create();
     SymbolTable st = stable_create();
     // Input verification
-    //if (argc != 2)
-    //    die("Wrong number of arguments, aborting...");
-    FILE* input = fopen("input", "r");
-    //FILE* input = fopen(argv[1], "r");
+    if (argc != 2)
+        die("Wrong number of arguments, aborting...");
+    //FILE* input = fopen("input", "r");
+    FILE* input = fopen(argv[1], "r");
     if (input == NULL)
        die("Error opening file, aborting...");
 
