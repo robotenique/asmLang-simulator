@@ -24,8 +24,7 @@ int hash(char* c){
 	for(; c[t]; t++);
 
 	for(int i=0; i<t; i++){
-		if(c[i] >= '0' && c[i] <= 'z') res = (res + (c[i]-'0'+1) * po(92, i)) % p;
-		else if(c[i] >= '!' && c[i] <= '/') res = (res + (c[i]-'!'+76) * po(92, i)) % p;
+		if(c[i] >= '!' && c[i] <= 'z') res = (res + (c[i]-'!'+1) * po(91, i)) % p;
 	}
 
 	return res;
