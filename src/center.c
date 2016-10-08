@@ -17,8 +17,8 @@ void centralizeLine (Buffer *B, int col, int i, int j, FILE *output);
 int main(int argc, char const *argv[]) {
     /* isspace(char c):
      *
-     * @return: 0 se c != espaço
-     *          nao(0) se c == espaço
+     * @return: 0 if c != space
+     *          not(0) if c == space
      */
     FILE *input, *output;
     int col, nLine = 0;

@@ -67,8 +67,7 @@ InsertionResult stable_insert(SymbolTable table, const char *key){
 
     char* cpy = emalloc(strlen(key));
     strcpy(cpy, key);
-	int h = hash(cpy);
-
+	  int h = hash(cpy);
     while (strcmp(hashes[h], key)) {
         if (hashes[h][0] == 0) {
         	if (qtd == HASH_SIZE) die("Symbol Table is already full.");
@@ -101,7 +100,7 @@ InsertionResult stable_insert(SymbolTable table, const char *key){
 EntryData *stable_find(SymbolTable table, const char *key) {
     char* cpy = emalloc(strlen(key));
     cpy = strcpy(cpy, key);
-    int h = hash(cpy);
+    int h = hash(cpy);    
 
     EntryData* ed;
 
