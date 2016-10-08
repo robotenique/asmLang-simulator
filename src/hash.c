@@ -31,6 +31,12 @@ int hash(char* c){
 		else if(c[i] == '-') res = (res + (c[i]-'-'+63)*po(70, i)) % p;
 		else if(c[i] == '_') res = (res + (c[i]-'_'+64)*po(70, i)) % p;
 		else if(c[i] == '.') res = (res + (c[i]-'.'+65)*po(70, i)) % p;
+		else if(c[i] == '\"') res = (res + (c[i]-'\"'+66)*po(70, i)) % p;
+		else if(c[i] == '\'') res = (res + (c[i]-'\''+67)*po(70, i)) % p;
+		else if(c[i] == '!') res = (res + (c[i]-'!'+68)*po(70, i)) % p;
+		else if(c[i] == '#') res = (res + (c[i]-'#'+69)*po(70, i)) % p;
+
+
 	}
 
 	return res;
