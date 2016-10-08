@@ -20,10 +20,9 @@ typedef struct {
     char* p;
     int freq;
 } words;
-char word[50], table[HASH_SIZE][50];
-int keys[HASH_SIZE], nwords = 0;
+char word[80], table[HASH_SIZE][80];
 words copiaSt[HASH_SIZE];
-int wide = 0, ind = 0;
+int wide = 0, ind = 0, nwords = 0;
 
 int max(int a, int b);
 int visit(const char *key, EntryData *data);

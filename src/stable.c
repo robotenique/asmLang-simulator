@@ -18,7 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-static char hashes[HASH_SIZE][50];
+static char hashes[HASH_SIZE][80];
 static int keys[HASH_SIZE];
 
 

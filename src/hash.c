@@ -9,8 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "../include/hash.h"
-char word[50];
-char table[HASH_SIZE][50];
+
 int p = 1e7 - 9;
 
 long long po(int x, int e){
@@ -25,18 +24,8 @@ int hash(char* c){
 	for(; c[t]; t++);
 
 	for(int i=0; i<t; i++){
-		if(c[i] >= '0' && c[i] <= '9') res = (res + (c[i]-'0'+1)*po(70, i)) % p;
-		else if(c[i] >= 'A' && c[i] <= 'Z') res = (res + (c[i]-'A'+11)*po(70, i)) % p;
-		else if(c[i] >= 'a' && c[i] <= 'z') res = (res + (c[i]-'a'+37)*po(70, i)) % p;
-		else if(c[i] == '-') res = (res + (c[i]-'-'+63)*po(70, i)) % p;
-		else if(c[i] == '_') res = (res + (c[i]-'_'+64)*po(70, i)) % p;
-		else if(c[i] == '.') res = (res + (c[i]-'.'+65)*po(70, i)) % p;
-		else if(c[i] == '\"') res = (res + (c[i]-'\"'+66)*po(70, i)) % p;
-		else if(c[i] == '\'') res = (res + (c[i]-'\''+67)*po(70, i)) % p;
-		else if(c[i] == '!') res = (res + (c[i]-'!'+68)*po(70, i)) % p;
-		else if(c[i] == '#') res = (res + (c[i]-'#'+69)*po(70, i)) % p;
-
-
+		if(c[i] >= '0' && c[i] <= 'z') res = (res + (c[i]-'0'+1) * po(92, i)) % p;
+		else if(c[i] >= '!' && c[i] <= '/') res = (res + (c[i]-'!'+76) * po(92, i)) % p;
 	}
 
 	return res;
