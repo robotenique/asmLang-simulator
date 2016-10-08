@@ -20,7 +20,7 @@ typedef struct {
     char* p;
     int freq;
 } words;
-char word[80], table[HASH_SIZE][80];
+char word[80];
 words copiaSt[HASH_SIZE];
 int wide = 0, ind = 0, nwords = 0;
 
@@ -73,7 +73,6 @@ int main(int argc, char **argv) {
     stable_destroy(st);
     buffer_destroy(B);
     return 0;
-//
 }
 
 
@@ -104,9 +103,9 @@ int visit(const char *key, EntryData *data){
  * their words.
  * @args a: First pointer
  *       b: Second pointer
- * @return 	< 0, if 'a' has a word less than the word of 'b'.
- *			> 0, if 'b' has a word less than the word of 'a'.
- *			= 0, if 'a' has a word equal to the word of 'b'.
+ * @return  < 0, if 'a' has a word less than the word of 'b'.
+ *          > 0, if 'b' has a word less than the word of 'a'.
+ *          = 0, if 'a' has a word equal to the word of 'b'.
  */
 int compare (const void * a, const void * b){
   return strcmp(((words *)a)->p, ((words *)b)->p);
