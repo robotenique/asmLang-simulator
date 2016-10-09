@@ -67,7 +67,11 @@ int main(int argc, char **argv) {
 
     //Print the words in the specified format and order
     qsort(copiaSt, nwords, sizeof(words), compare);
-    for (int i=0; i<nwords; i++) printf("%s %*d\n", copiaSt[i].p, (int) (wide - strlen(copiaSt[i].p) + 1), copiaSt[i].freq);
+    int len;
+    for (int i=0; i<nwords; i++) {
+        len = strlen(copiaSt[i].p) == wide ? (int) (wide - strlen(copiaSt[i].p)) : (int) (wide - strlen(copiaSt[i].p)+1);
+        printf("%s %*d\n", copiaSt[i].p, len, copiaSt[i].freq);
+    }
 
     //Destroy the data structures used
     stable_destroy(st);

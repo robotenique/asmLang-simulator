@@ -17,7 +17,7 @@
  */
  Buffer *buffer_create() {
      Buffer *B = emalloc(sizeof(Buffer));
-     B -> n = 1024;
+     B -> n = 256;
      B -> i = 0;
      B -> data = emalloc(B -> n) ;
      return B;
