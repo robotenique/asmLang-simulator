@@ -21,7 +21,7 @@ int main(int argc, char const *argv[]) {
      *          not(0) if c == space
      */
     FILE *input, *output;
-    int col, nLine = 0;
+    int col, nLine = 0, notPastL = 0;
     Buffer *B = buffer_create();
     set_prog_name("center.c");
 
@@ -41,17 +41,23 @@ int main(int argc, char const *argv[]) {
     while(read_line(input,B)) {
         int i, j;
         buffer_push_back(B,0);
-        if(nLine) fprintf(output,"\n");
+        if(nLine && notPastL) fprintf(output,"\n");
         nLine++;
+        notPastL = 1;
         for (i = 0;isspace(B->data[i]) && B->data[i]!=0; i++);
-        for (j =(B->i) - 2;isspace(B->data[j]) && j >= i; j--);      
-        if((i+1) == (B-> i))
+        for (j =(B->i) - 2;isspace(B->data[j]) && j >= i; j--);
+        if((i+1) == (B-> i)) {
+          for (int k = 0; k < B->i; k++)
+              if(B->data[k]=='\n') {
+                notPastL = 0;
+                break;
+            }
           fprintf(output, "%s",B->data);
+      }
         else if((j - i + 1) > col) {
             for (int p = i; p <= j; fprintf(output, "%c",B->data[p]), p++);
             print_error_msg("line %d: Line too long\n", nLine);
         }
-
         else centralizeLine(B, col, i, j, output);
     }
 
