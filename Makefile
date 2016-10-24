@@ -8,15 +8,12 @@ CFLAGS = -Wall -std=c99 -O2
 .PHONY: clean
 
 
-all: center freq
+all: parser
 
 
-center: center.o buffer.o error.o
+parser: parserTest.o buffer.o error.o hash.o optable.o parser.o asmtypes.o
 	$(CC) -o $@ $^
 
-
-freq: freq.o stable.o error.o hash.o buffer.o
-	$(CC) -o $@ $^
 
 
 %.o: %.c include/%.h
@@ -28,4 +25,4 @@ freq: freq.o stable.o error.o hash.o buffer.o
 
 
 clean:
-	rm -f *.o *~ center freq
+	rm -f *.o *~ parser
