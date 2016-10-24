@@ -18,12 +18,24 @@
 #include "../include/opcodes.h"
 #include "../include/optable.h"
 #include "../include/parser.h"
+#include "../include/stable.h"
 int main(int argc, char const *argv[]) {
-    if (argc != 2)
-        die("Wrong number of arguments, aborting...");
-    //FILE* input = fopen("input", "r");
-    FILE* input = fopen(argv[1], "r");
+    Buffer *B = buffer_create();
+    SymbolTable st = stable_create();
+    Instruction * instList;
+    const char *errStr;
+    //if (argc != 2)
+    //    die("Wrong number of arguments, aborting...");
+    FILE* input = fopen("input", "r");
+    //FILE* input = fopen(argv[1], "r");
     if (input == NULL)
        die("Error opening file, aborting...");
+    while (read_line(input, B)) {
+        buffer_push_back(B,0);
+        parse(B->data, st, &instList, &errStr);
+        exit(-1);
+    }
+
+
     return 0;
 }
