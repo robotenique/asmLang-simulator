@@ -13,7 +13,7 @@ all: parser
 
 parser: parserTest.o buffer.o error.o hash.o optable.o parser.o asmtypes.o stable.o
 	$(CC) -o $@ $^
-
+	rm -f *.o *~
 
 
 %.o: %.c include/%.h
