@@ -31,8 +31,13 @@ int main(int argc, char const *argv[]) {
     if (input == NULL)
        die("Error opening file, aborting...");
     while (read_line(input, B)) {
+        // TODO: Separar as strings pelo ';', e mandar
+        // cada uma independentemente para o parser (Sem o ';')
+        // Se ainda houver linha, adiciona-la
         buffer_push_back(B,0);
+
         parse(B->data, st, &instList, &errStr);
+        buffer_reset(B);
         exit(-1);
     }
 
