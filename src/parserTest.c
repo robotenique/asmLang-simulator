@@ -19,6 +19,7 @@
 #include "../include/optable.h"
 #include "../include/parser.h"
 #include "../include/stable.h"
+
 int main(int argc, char const *argv[]) {
     Buffer *B = buffer_create();
     SymbolTable st = stable_create();
@@ -35,12 +36,9 @@ int main(int argc, char const *argv[]) {
         // cada uma independentemente para o parser (Sem o ';')
         // Se ainda houver linha, adiciona-la
         buffer_push_back(B,0);
-
         parse(B->data, st, &instList, &errStr);
         buffer_reset(B);
         exit(-1);
     }
-
-
     return 0;
 }

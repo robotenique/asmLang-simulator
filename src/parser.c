@@ -29,12 +29,13 @@ typedef struct BufferStorage {
 
 typedef struct errContainer {
     bool isErr;
-    int errLoc;
+    int pos;
+    char *errMsg;
 }errContainer;
 
 typedef union {
   char *label;
-  Operator *opr;
+  const Operator *opr;
 } InstrAlias;
 
 typedef struct InstrAux {
@@ -42,71 +43,161 @@ typedef struct InstrAux {
     bool isLabel;
 } InstrAux;
 
+typedef struct InstrConf {
+    bool label;
+    bool operator;
+    bool *operands;
+}InstrConf;
+
+bool isOprInvalid(const Operator *op, errContainer *errC);
+char *trimSpc(char *s);
+char *cutSpc(char *text);
 bool isEOL (BufferStorage BS);
 bool isValidChar(char c);
 int procLabel( BufferStorage *BS);
 void errLabel(BufferStorage BS);
 InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC);
-void addLabel(SymbolTable alias_table, const char *label);
+bool addLabel(SymbolTable alias_table, const char *label, errContainer *errC);
+
+
+/******************************************************************************
+ * parser.c
+ * First, we remove every extra space from the string.
+ * Then, we trim the spaces from the begining and ending of the string.
+ * Now the string is in the 'raw' form, i.e., when there is a space, it's
+ * only one, and there's no space in the end or the begining of the string;
+ *
+ * We then get a label or an operator.
+ *    -> If we found a label, then we try to get another operator;
+ *    -> If we found an operator, we evaluate if it's valid :
+ *          - If the operator is 'IS', it's not valid, because 'IS' needs
+ *            a label;
+ *
+ *
+ *
+ *
+ *****************************************************************************/
+
 
 int parse(const char *s, SymbolTable alias_table, Instruction **instr,
           const char **errptr) {
     int i;
     BufferStorage BS;
     errContainer errC;
-    InstrAux *iAux;
-    char *str = estrdup(s);
+    InstrConf iconf;
+    const Operator *opr;
+    InstrAux *iAux = NULL;
+    char *str = cutSpc(estrdup(s));
     BS.B = buffer_create();
     BS.x = BS.y = 0;
+    iconf.label = false;
+    iconf.operator = false;
     //Remove all spaces from the begining of the string
     for (i = 0; str[i]!=0; buffer_push_back(BS.B, str[i]), i++);
-    for (i = BS.x; BS.B->data[i]!=0 && isspace(BS.B->data[i]); i++, BS.x++);
     if(isEOL(BS)) return 1;
     iAux = getLabelOrOperator(&BS, &errC);
     /* IF iAux == NULL, then it's an error, so errC contains
-     * the number where the error was found.
+     * the position (in the string) where the error was found.
      */
-    if (!iAux) { return 0; }
-    if (iAux->isLabel)
-        addLabel(alias_table, (iAux->val).label);
+    if (iAux == NULL) { return 0; }
+
+    if (iAux->isLabel) {
+        // If there's error in adding the label, (TODO:) print ERROR
+        if(!addLabel(alias_table, (iAux->val).label, &errC)) {
+            errC.pos = BS.x;
+            return 0;
+        }
+        iconf.label = true;
+    }
+    else {
+        opr = (iAux->val).opr;
+        iconf.operator = true;
+        if(isOprInvalid(opr, &errC)) { return 0; }
+    }
+    // We have the label, now we need the operator!
+    if(iconf.label) {
+        BS.x = BS.y;
+        BS.x++;
+        BS.y++;
+        iAux = getLabelOrOperator(&BS, &errC);
+        if (iAux == NULL) {return 0; } //Expected operator
+        if(!iAux->isLabel) {
+            opr = (iAux->val).opr;
+            iconf.operator = true;
+        }
+    }
+
+    /* When the program gets to this point, we have:
+     * A label and an Operator    or
+     * An Operator
+     * TODO: Evaluate the operator, then get the (right type of) operands.
+     *       After we got the operands, check if the string of the
+     *       Instruction is over. If not, then there's an error.
+     */
+
 
 
     return 0;
 }
 
-void addLabel(SymbolTable alias_table, const char *label) {
-    char *aux = estrdup(label);
-    printf("Adiciona label = %s\n",aux );
+bool isOprInvalid(const Operator *op, errContainer *errC) {
+    if(op->opcode == IS) {
+        errC = emalloc(sizeof(errContainer));
+        errC->errMsg = estrdup("The operator \"IS\" needs a label!");
+        return true;
+    }
+    return false;
+}
+
+bool addLabel(SymbolTable alias_table, const char *label, errContainer *errC) {
+    errC = emalloc(sizeof(errContainer));
+    InsertionResult ir = stable_insert(alias_table, label);
+    if(ir.new == 0) {
+        errC->errMsg = estrdup("Label already defined!");
+        errC->isErr = true;
+        return false;
+    }
+    free(errC);
+    return true;
 }
 
 InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     int i;
+    errC = emalloc(sizeof(errContainer));
     errC->isErr = false;
     char first = BS->B->data[BS->x];
     if(!(isalpha(first)) && !(first == '_')) {
         errC->isErr = true;
-        errC->errLoc = BS->x;
+        errC->pos = BS->x;
         return NULL;
     }
     for (i = BS->x; isValidChar(BS->B->data[i]); i++);
     BS->y = i;
-    if(BS->B->data[BS->y + 1] != ' ') {
+    // If the next char after the last valid char is
+    // not an space, then it's an error
+    if(BS->B->data[BS->y] != ' ') {
         errC->isErr = true;
-        errC->errLoc = BS->y;
+        errC->pos = BS->y;
         return NULL;
     }
     char *str = estrdup((BS->B->data) + BS->x);
+    str[BS->y - BS->x] = 0;
+
     const Operator *op = optable_find(str);
-    InstrAux *ret;
+    InstrAux *ret = emalloc(sizeof(InstrAux));
     // If it's an operator
-    if(op) {
-        (ret->val).opr = op; //Try if it works TODO: make a operator_dup to fix this
+    if(op){
+        (ret->val).opr = op;
         ret->isLabel = false;
         return ret;
     }
     // If it's a label
-    ret->val.label = estrdup(str);
-    ret->isLabel = true;
+    else {
+        ret->val.label = estrdup(str);
+        ret->isLabel = true;
+    }
+    free(str);
+    free(errC);
     return ret;
 }
 
@@ -119,10 +210,50 @@ bool isValidChar(char c)  {
 }
 bool isEOL(BufferStorage BS) {
     char c;
-    if(!(BS.B->i))
+    int k;
+    if(BS.B->i == 0)
         return true;
     c = BS.B->data[BS.x];
-    if(c == '*')
+    if(c == '*' || c == '\n')
+        return true;
+    for (k = 0; k < BS.B->i && isspace(BS.B->data[k]); k++);
+    if(k == BS.B->i)
         return true;
     return false;
+}
+
+char *cutSpc(char *text) {
+   int length, c, d;
+   char *start;
+   c = d = 0;
+   length = strlen(text);
+   start = (char*)malloc(length+1);
+   if (start == NULL)
+      exit(EXIT_FAILURE);
+
+    while (*(text+c) != '\0') {
+      if (*(text+c) == ' ') {
+         int temp = c + 1;
+         if (*(text+temp) != '\0') {
+            while (*(text+temp) == ' ' && *(text+temp) != '\0') {
+               if (*(text+temp) == ' ') {
+                  c++;
+               }
+               temp++;
+            }
+         }
+      }
+      *(start+d) = *(text+c);
+      c++;
+      d++;
+   }
+   *(start+d)= '\0';
+   return trimSpc(start);
+}
+
+char *trimSpc(char *c) {
+    char * e = c + strlen(c) - 1;
+    while(*c && isspace(*c)) c++;
+    while(e > c && isspace(*e)) *e-- = '\0';
+    return c;
 }
