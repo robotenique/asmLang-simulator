@@ -125,6 +125,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
             opr = (iAux->val).opr;
             iconf.operator = true;
         }
+        else {return 0;} // Duplicate labels error
     }
 
     /* When the program gets to this point, we have:
@@ -134,7 +135,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
      *       After we got the operands, check if the string of the
      *       Instruction is over. If not, then there's an error.
      */
-
+     
 
 
     return 0;
@@ -180,14 +181,15 @@ InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
         errC->pos = BS->y;
         return NULL;
     }
+
     char *str = estrdup((BS->B->data) + BS->x);
     str[BS->y - BS->x] = 0;
 
     const Operator *op = optable_find(str);
     InstrAux *ret = emalloc(sizeof(InstrAux));
     // If it's an operator
-    if(op){
-        (ret->val).opr = op;
+    if(op != NULL){
+        ret->val.opr = op;
         ret->isLabel = false;
         return ret;
     }
