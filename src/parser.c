@@ -128,8 +128,13 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         if (iAux == NULL) {return 0; } //Expected operator
         if(!iAux->isLabel) {
             opr = (iAux->val).opr;
+            if(opr->opcode == EXTERN) {
+                /* TODO: Add error */
+                /* "Invalid label with EXTERN operator" */
+                return 0;
+            }
             iconf.operator = true;
-            ir = stable_insert(alias_table, label);
+            iconf.opr = opr;
         }
         else {return 0;} // Duplicate labels error
     }
