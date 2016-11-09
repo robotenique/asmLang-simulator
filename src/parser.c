@@ -128,6 +128,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         else {return 0;} // Duplicate labels error
     }
 
+    
     /* When the program gets to this point, we have:
      * A label and an Operator    or
      * An Operator
