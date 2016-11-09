@@ -100,7 +100,7 @@ InsertionResult stable_insert(SymbolTable table, const char *key){
 EntryData *stable_find(SymbolTable table, const char *key) {
     char* cpy = emalloc(strlen(key));
     cpy = strcpy(cpy, key);
-    int h = hash(cpy);    
+    int h = hash(cpy);
 
     EntryData* ed;
 

@@ -47,6 +47,8 @@ typedef struct InstrConf {
     bool label;
     bool operator;
     bool *operands;
+    char *lb;
+    const Operator *opr;
 }InstrConf;
 
 bool isOprInvalid(const Operator *op, errContainer *errC);
@@ -103,16 +105,19 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
 
     if (iAux->isLabel) {
         // If there's error in adding the label, (TODO:) print ERROR
-        if(!addLabel(alias_table, (iAux->val).label, &errC)) {
+        // If the label is already in the symbol table, it's error
+        if(containsLabel(alias_table, (iAux->val).label)) {
             errC.pos = BS.x;
             return 0;
         }
         iconf.label = true;
+        iconf.lb = estrdup((iAux->val).label);
     }
     else {
         opr = (iAux->val).opr;
-        iconf.operator = true;
         if(isOprInvalid(opr, &errC)) { return 0; }
+        iconf.operator = true;
+        iconf.opr = opr;
     }
     // We have the label, now we need the operator!
     if(iconf.label) {
@@ -124,6 +129,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         if(!iAux->isLabel) {
             opr = (iAux->val).opr;
             iconf.operator = true;
+            ir = stable_insert(alias_table, label);
         }
         else {return 0;} // Duplicate labels error
     }
@@ -135,7 +141,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
      *       After we got the operands, check if the string of the
      *       Instruction is over. If not, then there's an error.
      */
-     
+
 
 
     return 0;
@@ -150,7 +156,14 @@ bool isOprInvalid(const Operator *op, errContainer *errC) {
     return false;
 }
 
-bool addLabel(SymbolTable alias_table, const char *label, errContainer *errC) {
+bool containsLabel(SymbolTable alias_table, const char *label) {
+    if(stable_find(alias_table, label))
+        return false;
+    return true;
+}
+bool addLabel(SymbolTable alias_table, const char *label, errContainer *errC,
+            Operand *opr) {
+    /* Add a label to the symbol table. */
     errC = emalloc(sizeof(errContainer));
     InsertionResult ir = stable_insert(alias_table, label);
     if(ir.new == 0) {
@@ -214,48 +227,10 @@ bool isEOL(BufferStorage BS) {
     char c;
     int k;
     if(BS.B->i == 0)
+    if(!(BS.B->i))
         return true;
     c = BS.B->data[BS.x];
-    if(c == '*' || c == '\n')
-        return true;
-    for (k = 0; k < BS.B->i && isspace(BS.B->data[k]); k++);
-    if(k == BS.B->i)
+    if(c == '*')
         return true;
     return false;
-}
-
-char *cutSpc(char *text) {
-   int length, c, d;
-   char *start;
-   c = d = 0;
-   length = strlen(text);
-   start = (char*)malloc(length+1);
-   if (start == NULL)
-      exit(EXIT_FAILURE);
-
-    while (*(text+c) != '\0') {
-      if (*(text+c) == ' ') {
-         int temp = c + 1;
-         if (*(text+temp) != '\0') {
-            while (*(text+temp) == ' ' && *(text+temp) != '\0') {
-               if (*(text+temp) == ' ') {
-                  c++;
-               }
-               temp++;
-            }
-         }
-      }
-      *(start+d) = *(text+c);
-      c++;
-      d++;
-   }
-   *(start+d)= '\0';
-   return trimSpc(start);
-}
-
-char *trimSpc(char *c) {
-    char * e = c + strlen(c) - 1;
-    while(*c && isspace(*c)) c++;
-    while(e > c && isspace(*e)) *e-- = '\0';
-    return c;
 }
