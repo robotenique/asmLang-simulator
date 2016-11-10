@@ -162,9 +162,6 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     return 0;
 }
 
-asd, asd,asd aasd asd
-asd,   asd  ,asd
-
 Operand **getOperands(BufferStorage* bs, errContainer *errC, const Operator* op, SymbolTable st){
   int i = 0;
   int commas = 0;
