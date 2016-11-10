@@ -117,7 +117,6 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
             errC.pos = BS.x;
             return 0;
         }
-        printf("get: |%s|\n",BS.B->data);
         iconf.label = true;
         iconf.lb = estrdup((iAux->val).label);
     }
@@ -307,8 +306,8 @@ bool isOprInvalid(const Operator *op, errContainer *errC) {
 
 bool containsLabel(SymbolTable alias_table, const char *label) {
     if(stable_find(alias_table, label))
-        return false;
-    return true;
+        return true;
+    return false;
 }
 /*
 bool addLabel(SymbolTable alias_table, const char *label, errContainer *errC,
