@@ -1,4 +1,4 @@
-a IS      $0,0,k
+            top      							   K      							      *EK
 start  ADD     a,a,1
        MUL     a,$2,$3     * Multiplica.
        JMP     start

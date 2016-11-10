@@ -103,6 +103,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     //Add the string to the buffer
     for (i = 0; str[i]!=0; buffer_push_back(BS.B, str[i]), i++);
     buffer_push_back(BS.B, 0);
+    printf("read = |%s|\n",BS.B->data);
     if(isEOL(BS)) return 1;
     iAux = getLabelOrOperator(&BS, &errC);
     /* IF iAux == NULL, then it's an error, so errC contains
@@ -387,6 +388,7 @@ char *cutSpc(char *text) {
    int length, c, d;
    char *start;
    c = d = 0;
+   for(int i = 0; text[i]; text[i] = isspace(text[i]) ? ' ':text[i], i++);
    length = strlen(text);
    start = (char*)malloc(length+1);
    if (start == NULL)
