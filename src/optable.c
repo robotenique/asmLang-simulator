@@ -10,6 +10,12 @@
 // Array with all operators.
 static const int num_ops = 57;  // Number of operators.
 
+/*
+#define BYTE1        0x01  // One-byte number.
+#define REGISTER     0x20  // Register.
+#define IMMEDIATE    (REGISTER | BYTE1)  // Immediate constant.
+
+*/
 static const Operator operators[] =
   {
     { .name = "ADD",  .opcode = ADD,  .opd_types = { REGISTER, REGISTER, IMMEDIATE } },

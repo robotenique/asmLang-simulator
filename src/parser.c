@@ -75,7 +75,7 @@ bool addLabel(SymbolTable alias_table, const char *label, errContainer *errC);
  *          - If the operator is 'IS', it's not valid, because 'IS' needs
  *            a label;
  *
- *
+ *  TODO: remove comments before cutSpc
  *
  *
  *****************************************************************************/
@@ -96,6 +96,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     iconf.operator = false;
     //Remove all spaces from the begining of the string
     for (i = 0; str[i]!=0; buffer_push_back(BS.B, str[i]), i++);
+    buffer_push_back(BS.B, 0);
     if(isEOL(BS)) return 1;
     iAux = getLabelOrOperator(&BS, &errC);
     /* IF iAux == NULL, then it's an error, so errC contains
@@ -121,9 +122,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     }
     // We have the label, now we need the operator!
     if(iconf.label) {
-        BS.x = BS.y;
-        BS.x++;
-        BS.y++;
+        BS.x = ++BS.y;
         iAux = getLabelOrOperator(&BS, &errC);
         if (iAux == NULL) {return 0; } //Expected operator
         if(!iAux->isLabel) {
@@ -139,7 +138,20 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         else {return 0;} // Duplicate labels error
     }
 
-    
+    BS.x = ++BS.y;
+
+    int nargs;
+    for (nargs=0; iconf.opr -> opd_types[nargs] != 0; nargs++);
+
+    if (nargs == 3) {
+      Operand **vOps = getOperands(&BS, &errC, iconf.opr);
+
+      if (vOps == NULL) {
+        return 0; //null pointer
+      }
+
+    }
+
     /* When the program gets to this point, we have:
      * A label and an Operator    or
      * An Operator
@@ -147,11 +159,137 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
      *       After we got the operands, check if the string of the
      *       Instruction is over. If not, then there's an error.
      */
-
-
-
     return 0;
 }
+
+asd, asd,asd aasd asd
+asd,   asd  ,asd
+
+Operand **getOperands(BufferStorage* bs, errContainer *errC, const Operator* op, SymbolTable st){
+  int i = 0;
+  int commas = 0;
+  for (i = bs->x; i < bs->B->i-1; commas += (bs->B->data[i++] == ',')?1:0);
+
+  errC = emalloc(sizeof(errContainer));
+
+  char* oprds[3] = {strtok(bs->B->data, ","), strtok(NULL, ","), strtok(NULL, ",")};
+
+  if (commas != 2 || oprds[0] == NULL || oprds[1] == NULL || oprds[2] == NULL) {
+    errC -> errMsg = estrdup("Wrong number of operands.\n");
+    errC -> pos = bs -> x;
+    return NULL; // wrong number of commas
+  }
+
+  for (int i = 0; i < 3; i++) {
+    oprds[i] = trimSpc(oprds[i]);
+
+    int spaces = 0;
+    for (int j = 0; oprds[j]; spaces += oprds[j] == ' ' ? 1 : 0);
+
+    if (spaces) {
+      errC -> errMsg = estrdup("Invalid operand found.\n");
+      errC -> pos = bs -> x;
+      return NULL;
+    }
+  }
+/*
+#define BYTE1        0x01  // One-byte number.
+#define REGISTER     0x20  // Register.
+#define IMMEDIATE    (REGISTER | BYTE1)  // Immediate constant.
+
+*/Operand** ops = emalloc(3*sizeof(Operand*));
+
+  for (int i = 0; i < 3; i++)
+    switch (op -> opd_types[i]) {
+      case REGISTER:
+        ops[i] = isRegister(oprds[i]);
+        if (ops[i] == NULL) {
+          errC -> errMsg = estrdup("Invalid operand found.\n");
+          errC -> pos = bs -> x;
+          return NULL;
+        }
+
+        break;
+      case BYTE1:
+
+      case IMMEDIATE:
+    }
+}
+
+Operand* isRegister(char* oprd, SymbolTable st){
+  if (strcmp(oprd, "$") == 0) {
+    return NULL;
+  }
+
+  if (strlen(oprd) > 1 && oprd[0] == '$') {
+    char* check;
+    int n = strtol(oprd+1, &check, 10);
+
+    if (*check != '\0') {
+      return NULL;
+    }
+    
+    if (oprd[0] = '$' && n <= 255 && n >= 0) {
+      return operand_create_register(oprd+1);
+    }
+  } else {
+    EntryData *ed = stable_find(st, oprd);
+
+    if (ed == NULL) return NULL;
+
+    if (ed -> opd -> type == REGISTER) {
+      return operand_dup(ed -> opd);
+    }
+  }
+}
+
+
+Operand* isByte(char* oprd, SymbolTable st){
+  if (strcmp(oprd, "0") == 0) {
+    return operand_create_register(oprd+1);    
+  }
+
+  char* check;
+  int n = strtol(oprd, &check, 10);
+
+  if (oprd[0] == '#'){ 
+    if (strlen(oprd) < 2) {
+      return NULL;
+    }
+
+    n = strtol(oprd+1, &check, 16);
+
+    if (*check != '\0') {
+      return NULL;
+    }
+
+    if (n >= 0 && n <= 255) {
+      return operand_create_number((octa) n);
+    }
+
+    return NULL;
+  } 
+
+  if (*check == '\0') {
+    if (n >= 0 && n <= 255) {
+      return operand_create_number((octa) n);
+    } 
+  } else {
+    EntryData *ed = stable_find(st, oprd);
+
+    if (ed == NULL) return NULL;
+
+    if (ed -> opr -> type == NUMBER_TYPE) {
+      if (ed -> opr -> value.num >= 0 && ed -> opr -> value.num <= 255) {
+        return operand_create_number((octa) ed -> opr -> value.num);
+      }
+    }
+  }
+
+  return NULL;
+}
+
+
 
 bool isOprInvalid(const Operator *op, errContainer *errC) {
     if(op->opcode == IS) {
