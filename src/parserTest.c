@@ -53,6 +53,7 @@ int main(int argc, char const *argv[]) {
         // Se ainda houver linha, adiciona-la
 
         while (first -> next != NULL) {
+            printf("Enviando= |%s|\n",(first -> next) -> s);
             parse((first -> next) -> s, st, &instList, &errStr);
             first = first -> next;
             exit(1);

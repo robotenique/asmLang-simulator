@@ -100,7 +100,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     BS.x = BS.y = 0;
     iconf.label = false;
     iconf.operator = false;
-    //Remove all spaces from the begining of the string
+    //Add the string to the buffer
     for (i = 0; str[i]!=0; buffer_push_back(BS.B, str[i]), i++);
     buffer_push_back(BS.B, 0);
     if(isEOL(BS)) return 1;
@@ -117,6 +117,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
             errC.pos = BS.x;
             return 0;
         }
+        printf("get: |%s|\n",BS.B->data);
         iconf.label = true;
         iconf.lb = estrdup((iAux->val).label);
     }
@@ -249,7 +250,6 @@ Operand* isRegister(char* oprd, SymbolTable st){
   }
   return NULL;
 }
-
 
 Operand* isByte(char* oprd, SymbolTable st){
   if (strcmp(oprd, "0") == 0) {
