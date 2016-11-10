@@ -51,15 +51,13 @@ int main(int argc, char const *argv[]) {
         // TODO: Separar as strings pelo ';', e mandar
         // cada uma independentemente para o parser (Sem o ';')
         // Se ainda houver linha, adiciona-la
-        
+
         while (first -> next != NULL) {
             parse((first -> next) -> s, st, &instList, &errStr);
             first = first -> next;
+            exit(1);
         }
-
         buffer_reset(B);
-
-        exit(-1);
     }
 
     return 0;

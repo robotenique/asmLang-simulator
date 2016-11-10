@@ -2,7 +2,7 @@
 # Makefile para Parte 1 do projeto.
 #
 
-CFLAGS = -Wall -std=c99 -O2
+CFLAGS = -Wall --std=c99 -O2
 
 
 .PHONY: clean
@@ -24,4 +24,4 @@ parser: parserTest.o buffer.o error.o hash.o optable.o parser.o asmtypes.o stabl
 
 
 clean:
-	rm -f *.o *~ parser
+	rm -f *.o *~ *.out parser
