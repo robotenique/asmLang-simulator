@@ -20,10 +20,10 @@
 #include "../include/opcodes.h"
 #include "../include/optable.h"
 #include "../include/parser.h"
-#define LIMBYTE1 1 << 7
-#define LIMBYTE2 1 << 15
-#define LIMBYTE3 1 << 23
-#define LIMTETRA 1 << 31
+#define LIMBYTE1 ((1UL << 8) - 1)
+#define LIMBYTE2 ((1UL << 16) - 1)
+#define LIMBYTE3 ((1UL << 24) - 1)
+#define LIMTETRA ((1UL << 32) - 1)
 
 typedef enum {false, true} bool;
 
@@ -56,28 +56,24 @@ typedef struct InstrConf {
     const Operator *opr;
 }InstrConf;
 
-bool isOprInvalid(const Operator *op, errContainer *errC);
 char *trimSpc(char *s);
 char *cutSpc(char *text);
+char *trimComment(char *text);
 bool isEOL (BufferStorage BS);
 bool isValidChar(char c);
-int procLabel( BufferStorage *BS);
-void errLabel(BufferStorage BS);
-InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC);
-bool addLabel(SymbolTable alias_table, const char *label, errContainer *errC);
 bool containsLabel(SymbolTable alias_table, const char *label);
-char *trimComment(char *text);
+bool isOprInvalid(const Operator *op, errContainer *errC);
+InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC);
 Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st);
-Operand* isRegister(char* oprd, SymbolTable st);
-Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE);
 Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st);
 Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st);
-Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
-    const Operator* op, SymbolTable st);
-
+Operand* isString(char* oprd);
+Operand* isLabel(char* oprd, SymbolTable st);
+Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE);
+Operand* isRegister(char* oprd, SymbolTable st);
 
 /******************************************************************************
  * parser.c
@@ -116,18 +112,22 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     for (i = 0; str[i]!=0; buffer_push_back(BS.B, str[i]), i++);
     buffer_push_back(BS.B, 0);
     printf("read = |%s|\n",BS.B->data);
-    if(isEOL(BS)) return 1;
+    if(isEOL(BS)) return 1; //Empty line
     iAux = getLabelOrOperator(&BS, &errC);
     /* IF iAux == NULL, then it's an error, so errC contains
      * the position (in the string) where the error was found.
      */
-    if (iAux == NULL) { return 0; }
+    if (iAux == NULL) {
+        set_error_msg(errC.errMsg);
+        return 0;
+    }
 
     if (iAux->isLabel) {
         // If there's error in adding the label, (TODO:) print ERROR
         // If the label is already in the symbol table, it's error
         if(containsLabel(alias_table, (iAux->val).label)) {
             errC.pos = BS.x;
+            set_error_msg("Label already defined!");
             return 0;
         }
         iconf.label = true;
@@ -135,7 +135,10 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     }
     else {
         opr = (iAux->val).opr;
-        if(isOprInvalid(opr, &errC)) { return 0; }
+        if(isOprInvalid(opr, &errC)) {
+            set_error_msg(errC.errMsg);
+            return 0;
+        }
         iconf.operator = true;
         iconf.opr = opr;
     }
@@ -143,18 +146,23 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     if(iconf.label) {
         BS.x = ++BS.y;
         iAux = getLabelOrOperator(&BS, &errC);
-        if (iAux == NULL) {return 0; } //Expected operator
+        if (iAux == NULL) {
+            set_error_msg(errC.errMsg);
+            return 0;
+        }
         if(!iAux->isLabel) {
             opr = (iAux->val).opr;
             if(opr->opcode == EXTERN) {
-                /* TODO: Add error */
-                /* "Invalid label with EXTERN operator" */
+                set_error_msg("EXTERN operator doesn't support Label!");
                 return 0;
             }
             iconf.operator = true;
             iconf.opr = opr;
         }
-        else {return 0;} // Duplicate labels error
+        else {
+            set_error_msg("Duplicate label!");
+            return 0;
+        }
     }
 
     BS.x = ++BS.y;
@@ -162,12 +170,15 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     int nargs;
     for (nargs = 0; nargs < 3 && iconf.opr->opd_types[nargs] != OP_NONE; ++nargs);
     Operand **vOps;
+    vOps = emalloc(sizeof(Operand *));
+    for(int i = 0; i < 3; i++)
+        vOps[i] = NULL;
 
     if (nargs == 3) {
         vOps = getOperands_3(&BS, &errC, iconf.opr, alias_table);
-
         if (vOps == NULL)
-            return 0; //null pointer
+            return 0;
+
 
         if (iconf.label) {
           InsertionResult ir = stable_insert(alias_table, iconf.lb);
@@ -177,7 +188,8 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         Operand **vOps = getOperands_2(&BS, &errC, iconf.opr, alias_table);
 
         if (vOps == NULL) {
-            return 0; //null pointer
+            set_error_msg(errC.errMsg);
+            return 0;
         }
         if (iconf.label) {
           InsertionResult ir = stable_insert(alias_table, iconf.lb);
@@ -186,7 +198,8 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     } else if (nargs == 1) {
         vOps = getOperands_1(&BS, &errC, iconf.opr, alias_table);
         if (vOps == NULL) {
-            return 0; //null pointer
+            set_error_msg(errC.errMsg);
+            return 0;
         }
         if (iconf.label) {
           InsertionResult ir = stable_insert(alias_table, iconf.lb);
@@ -208,7 +221,6 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
           InsertionResult ir = stable_insert(alias_table, iconf.lb);
           ir.data->opd = operand_create_label(iconf.lb);
         }
-        for(int i = 0; i < 3; vOps[i] = NULL, i++);
       }
     *instr = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
     return 1;
@@ -229,7 +241,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
   }
 
   if (commas != 0 || oprds[0] == NULL) {
-    errC -> errMsg = estrdup("Wrong number of operands.\n");
+    errC -> errMsg = estrdup("Wrong number of operands!\n");
     errC -> pos = bs -> x;
     return NULL; // wrong number of commas
   }
@@ -239,7 +251,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
   int spaces = 0;
   for (int j = 0; oprds[0][j]; spaces += ((oprds[0][j++] == ' ') ? 1 : 0));
   if (spaces) {
-    errC -> errMsg = estrdup("Invalid operand found.\n");
+    errC -> errMsg = estrdup("Invalid operand found!\n");
     errC -> pos = bs -> x;
     return NULL;
   }
@@ -249,15 +261,15 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
   switch (op -> opd_types[0]) {
     case LABEL:
       if ((ops[i] = isLabel(oprds[i], st)) == NULL) {
-        errC -> errMsg = estrdup("Invalid operand found.\n");
+        errC -> errMsg = estrdup("Invalid operand found, expected Label!\n");
         errC -> pos = bs -> x;
         return NULL;
       }
       printf("LABEL!\n");
       break;
     case BYTE3:
-      if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE3) == NULL)){
-        errC -> errMsg = estrdup("Invalid operand found.\n");
+      if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE3))== NULL){
+        errC -> errMsg = estrdup("Invalid operand found, expected Byte3!\n");
         errC -> pos = bs -> x;
         return NULL;
       }
@@ -266,7 +278,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
     case ADDR3:
       if((ops[i] = isLabel(oprds[i], st)) == NULL){
         if ((ops[i] = isByte(oprds[i], st, 1, LIMBYTE3)) == NULL) {
-          errC -> errMsg = estrdup("Invalid operand found.\n");
+          errC -> errMsg = estrdup("Invalid operand found, expected Addr3!\n");
           errC -> pos = bs -> x;
           return NULL;
         }
@@ -275,7 +287,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
       break;
     case REGISTER:
       if ((ops[i] = isRegister(oprds[i], st)) == NULL) {
-        errC -> errMsg = estrdup("Invalid operand found.\n");
+        errC -> errMsg = estrdup("Invalid operand found, expected Register!\n");
         errC -> pos = bs -> x;
         return NULL;
       }
@@ -283,7 +295,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
       break;
     case BYTE1:
       if ((ops[i] = isByte(oprds[i], st,  0, LIMBYTE1)) == NULL) {
-        errC -> errMsg = estrdup("Invalid operand found.\n");
+        errC -> errMsg = estrdup("Invalid operand found, expected Byte1!\n");
         errC -> pos = bs -> x;
         return NULL;
       }
@@ -291,28 +303,26 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
       break;
     case STRING:
       if ((ops[i] = isString(oprds[i])) == NULL) {
-        errC -> errMsg = estrdup("Invalid operand found.\n");
+        errC -> errMsg = estrdup("Invalid operand found, expected String!\n");
         errC -> pos = bs -> x;
         return NULL;
       }
-
       printf("STRING!\n");
       break;
 
     case TETRABYTE | NEG_NUMBER:
-      if ((ops[i] = isByte(oprds[i], st, 1, 0, LIMTETRA)) == NULL) {
-        errC -> errMsg = estrdup("Invalid operand found.\n");
+      if ((ops[i] = isByte(oprds[i], st, 1, LIMTETRA)) == NULL) {
+        errC -> errMsg = estrdup("Invalid operand found, expected Tetrabyte (positive or negative)!\n");
         errC -> pos = bs -> x;
         return NULL;
       }
-
       printf("TETRABYTE | NEG_NUMBER!\n");
       break;
 
     case REGISTER | TETRABYTE | NEG_NUMBER:
         if ((ops[i] = isRegister(oprds[i], st)) == NULL)
             if ((ops[i] = isByte(oprds[i], st, 1, LIMTETRA)) == NULL) {
-                errC -> errMsg = estrdup("Invalid operand found.\n");
+                errC -> errMsg = estrdup("Invalid operand found, expected Register or Tetrabyte (positive or negative)!\n");
                 errC -> pos = bs -> x;
                 return NULL;
             }
@@ -344,7 +354,7 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
   if (commas != 1 || oprds[0] == NULL || oprds[1] == NULL) {
     errC -> errMsg = estrdup("Wrong number of operands.\n");
     errC -> pos = bs -> x;
-    return NULL; // wrong number of commas
+    return NULL;
   }
 
   for (int i = 0; i < 2; i++) {
@@ -353,7 +363,7 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
     int spaces = 0;
     for (int j = 0; oprds[i][j]; spaces += ((oprds[i][j++] == ' ') ? 1 : 0));
     if (spaces) {
-      errC -> errMsg = estrdup("Invalid operand found.\n");
+      errC -> errMsg = estrdup("Invalid operand found!\n");
       errC -> pos = bs -> x;
       return NULL;
     }
@@ -366,32 +376,30 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
       case REGISTER:
         ops[i] = isRegister(oprds[i], st);
         if (ops[i] == NULL) {
-          errC -> errMsg = estrdup("Invalid operand found.\n");
+          set_error_msg("Invalid operand, expected Register.\n");
           errC -> pos = bs -> x;
           return NULL;
         }
         printf("REGISTER!\n");
         break;
-      case ADDR2:
-        if ((ops[i] = isLabel(oprds[i], st)) == NULL) {
-          if ((ops[i] = isByte(oprds[i], st, 1, LIMBYTE2) == NULL)){
-            errC -> errMsg = estrdup("Invalid operand found.\n");
-            errC -> pos = bs -> x;
-            return NULL;
-          }
-        }
-
-        break;
+        case ADDR2:
+            if ((ops[i] = isLabel(oprds[i], st)) == NULL) {
+                if ((ops[i] = isByte(oprds[i], st, 1, LIMBYTE2)) == NULL){
+                    errC -> errMsg = estrdup("Invalid operand, expected Label or Byte2.\n");
+                    errC -> pos = bs -> x;
+                    return NULL;
+                    }
+            }
+            break;
       case BYTE2:
-        if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE2)) == NULL) {
-          errC -> errMsg = estrdup("Invalid operand found.\n");
-          errC -> pos = bs -> x;
-          return NULL;
-        }
-
-        break;
+            if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE2)) == NULL) {
+                errC -> errMsg = estrdup("Invalid operand, expected Byte2.\n");
+                errC -> pos = bs -> x;
+                return NULL;
+            }
+            break;
       default:
-        break;
+            break;
     }
     ops[2] = NULL;
 
@@ -413,9 +421,10 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
   }
 
   if (commas != 2 || oprds[0] == NULL || oprds[1] == NULL || oprds[2] == NULL) {
-    errC -> errMsg = estrdup("Wrong number of operands.\n");
+    set_error_msg("Wrong number of operands!\n");
     errC -> pos = bs -> x;
-    return NULL; // wrong number of commas
+    free(tmp);
+    return NULL;
   }
   for (int i = 0; i < 3; i++) {
     oprds[i] = trimSpc(oprds[i]);
@@ -423,8 +432,9 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     int spaces = 0;
     for (int j = 0; oprds[i][j]; spaces += ((oprds[i][j++] == ' ') ? 1 : 0));
     if (spaces) {
-      errC -> errMsg = estrdup("Invalid operand found.\n");
+      set_error_msg("Invalid operand found!\n");
       errC -> pos = bs -> x;
+      free(tmp);
       return NULL;
     }
   }
@@ -436,7 +446,7 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
       case REGISTER:
         ops[i] = isRegister(oprds[i], st);
         if (ops[i] == NULL) {
-          errC -> errMsg = estrdup("Invalid operand found.\n");
+          set_error_msg("Invalid operand, expected Register.\n");
           errC -> pos = bs -> x;
           return NULL;
         }
@@ -444,16 +454,16 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
         break;
       case BYTE1:
         if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE1)) == NULL) {
-          errC -> errMsg = estrdup("Invalid operand found.\n");
+          set_error_msg("Invalid operand, expected Byte1.\n");
           errC -> pos = bs -> x;
           return NULL;
         }
         printf("BYTE1!\n");
         break;
       case IMMEDIATE:
-        if ((ops[i] = isRegister(oprds[i], st, 0, LIMBYTE1)) == NULL) {
-          if ((ops[i] = isByte(oprds[i], st)) == NULL) {
-            errC -> errMsg = estrdup("Invalid operand found.\n");
+        if ((ops[i] = isRegister(oprds[i], st)) == NULL) {
+          if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE1)) == NULL) {
+            set_error_msg("Invalid operand, expected Register or Byte1!\n");
             errC -> pos = bs -> x;
             return NULL;
           }
@@ -462,7 +472,7 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
       default:
         break;
     }
-
+    free(errC);
     return ops;
 }
 
@@ -512,6 +522,7 @@ Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE){
             if (*check == '\0')
                 if (n >= -LIMBYTE*neg && n <= LIMBYTE)
                     return operand_create_number(n);
+            
         }
     return NULL;
     }
@@ -531,13 +542,12 @@ Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE){
 }
 
 Operand* isRegister(char* oprd, SymbolTable st){
-  if (strcmp(oprd, "$") == 0) {
+  if (strcmp(oprd, "$") == 0)
     return NULL;
-  }
 
   if (strlen(oprd) > 1 && oprd[0] == '$') {
     char* check;
-    long long int n = strtoll(oprd, &check, 10);
+    long long int n = strtoll(oprd + 1, &check, 10);
     if (errno == ERANGE) return NULL;
 
     if (*check != '\0') {
@@ -562,7 +572,7 @@ Operand* isRegister(char* oprd, SymbolTable st){
 bool isOprInvalid(const Operator *op, errContainer *errC) {
     if(op->opcode == IS) {
         errC = emalloc(sizeof(errContainer));
-        errC->errMsg = estrdup("The operator \"IS\" needs a label!");
+        errC->errMsg = estrdup("Operator \"IS\" expects a label!");
         return true;
     }
     return false;
@@ -580,6 +590,7 @@ InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     if(!(isalpha(first)) && !(first == '_')) {
         errC->isErr = true;
         errC->pos = BS->x;
+        errC->errMsg = estrdup("Invalid char for label / operator!");
         return NULL;
     }
     for (i = BS->x; isValidChar(BS->B->data[i]); i++);
@@ -589,6 +600,7 @@ InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     if(strcmp(BS->B->data + BS->x, "NOP") != 0 && BS->B->data[BS->y] != ' ') {
         errC->isErr = true;
         errC->pos = BS->y;
+        errC->errMsg = estrdup("Unexpected end of Instruction!");
         return NULL;
     }
 
@@ -611,9 +623,6 @@ InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     free(str);
     free(errC);
     return ret;
-}
-void errLabel(BufferStorage BS) {
-    printf("NOICE\n");
 }
 bool isValidChar(char c)  {
     return c && (isalnum(c) || c == '_');
@@ -669,4 +678,7 @@ char *trimComment(char *text) {
     for(i = 0; text[i] && text[i] != '*'; i++);
     if(text[i] == '*') text[i] = 0;
     return estrdup(text);
+}
+void showParseError(errContainer errC) {
+    printf("UAU\n");
 }

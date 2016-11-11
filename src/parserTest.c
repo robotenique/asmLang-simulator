@@ -22,6 +22,7 @@
 #include "../include/defaultops.h"
 
 void printOperands(Operand **opds);
+char *removeNL(char *str);
 
 
 int main(int argc, char const *argv[]) {
@@ -29,15 +30,16 @@ int main(int argc, char const *argv[]) {
     SymbolTable st = stable_create();
     Instruction * instList;
     int parseResult;
-    char *tmp;
+    char *tmp = estrdup("");
     const char *errStr;
+    set_prog_name("parser");
     //if (argc != 2)
     //    die("Wrong number of arguments, aborting...");
     FILE* input = fopen("input", "r");
     //FILE* input = fopen(argv[1], "r");
     if (input == NULL)
        die("Error opening file, aborting...");
-
+    int lineCount = 0;
     while (read_line(input, B)) {
         buffer_push_back(B,0);
 
@@ -51,44 +53,65 @@ int main(int argc, char const *argv[]) {
             insert(token);
             token = strtok (NULL, ";");
         }
-
         while (first -> next != NULL) {
             printf("Send = |%s|\n",(first -> next) -> s);
             parseResult = parse((first->next)->s, st, &instList, &errStr);
+            lineCount++;
             if(parseResult) {
+                tmp = removeNL((first->next)->s);
                 printf("=============PARSED============\n");
-                printf("LINE = %s\n",(first->next)->s);
+                printf("LINE = %s\n",tmp);
                 printf("LABEL = %s\n",(tmp = (instList->label ? instList->label : "n/a")));
                 printf("OPERATOR = %s\n",instList->op->name);
                 printOperands(instList->opds);
             }
+            else {
+                tmp = removeNL((first->next)->s);
+                printf("\n=============FOUND ERROR=============\n");
+                printf("line %d: \"%s\"\n",lineCount, tmp);
+                print_error_msg(NULL);
+            }
             first = first->next;
-            exit(1);
+            
         }
         buffer_reset(B);
     }
-
     return 0;
 }
 
 void printOperands(Operand **opds) {
     printf("OPERANDS = ");
-    for(int i = 0; i < 3; i++)
+    for(int i = 0; i < 3; i++) {
+        char *tmp;
+        if(i == 2) tmp = ";";
+        else tmp = estrdup(", ");
         switch (opds[i]->type) {
             case REGISTER:
-                printf("Register(%d)\n",opds[i]->value.reg);
+                printf("Register(%d)%s",opds[i]->value.reg, tmp);
                 break;
             case NUMBER_TYPE:
-                printf("Number(%lli)\n",opds[i]->value.num);
+                printf("Number(%lli)%s",opds[i]->value.num, tmp);
                 break;
             case LABEL:
-                printf("Label(%s)\n",opds[i]->value.label);
+                printf("Label(%s)%s",opds[i]->value.label, tmp);
                 break;
             case STRING:
-                printf("String(%s)\n",opds[i]->value.str);
+                printf("String(%s)%s",opds[i]->value.str, tmp);
                 break;
             default:
                 continue;
         }
+    }
+    printf("\n");
 
+}
+
+char *removeNL(char *str) {
+    char *tmp = estrdup(str);
+    for(int i = strlen(tmp); i > 0; i--)
+        if(tmp[i] == '\n'){
+            tmp[i] = 0;
+            break;
+        }
+    return tmp;
 }
