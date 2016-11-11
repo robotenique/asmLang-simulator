@@ -21,11 +21,15 @@
 #include "../include/stable.h"
 #include "../include/defaultops.h"
 
+void printOperands(Operand **opds);
+
+
 int main(int argc, char const *argv[]) {
     Buffer *B = buffer_create();
     SymbolTable st = stable_create();
     Instruction * instList;
-
+    int parseResult;
+    char *tmp;
     const char *errStr;
     //if (argc != 2)
     //    die("Wrong number of arguments, aborting...");
@@ -37,7 +41,7 @@ int main(int argc, char const *argv[]) {
     while (read_line(input, B)) {
         buffer_push_back(B,0);
 
-        end = malloc(sizeof(string));
+        end = emalloc(sizeof(string));
         end -> s = NULL;
         end -> next = NULL;
         first = end;
@@ -50,12 +54,41 @@ int main(int argc, char const *argv[]) {
 
         while (first -> next != NULL) {
             printf("Send = |%s|\n",(first -> next) -> s);
-            parse((first -> next) -> s, st, &instList, &errStr);
-            first = first -> next;
+            parseResult = parse((first->next)->s, st, &instList, &errStr);
+            if(parseResult) {
+                printf("=============PARSED============\n");
+                printf("LINE = %s\n",(first->next)->s);
+                printf("LABEL = %s\n",(tmp = (instList->label ? instList->label : "n/a")));
+                printf("OPERATOR = %s\n",instList->op->name);
+                printOperands(instList->opds);
+            }
+            first = first->next;
             exit(1);
         }
         buffer_reset(B);
     }
 
     return 0;
+}
+
+void printOperands(Operand **opds) {
+    printf("OPERANDS = ");
+    for(int i = 0; i < 3; i++)
+        switch (opds[i]->type) {
+            case REGISTER:
+                printf("Register(%d)\n",opds[i]->value.reg);
+                break;
+            case NUMBER_TYPE:
+                printf("Number(%lli)\n",opds[i]->value.num);
+                break;
+            case LABEL:
+                printf("Label(%s)\n",opds[i]->value.label);
+                break;
+            case STRING:
+                printf("String(%s)\n",opds[i]->value.str);
+                break;
+            default:
+                continue;
+        }
+
 }

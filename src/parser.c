@@ -71,8 +71,12 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st);
 Operand* isRegister(char* oprd, SymbolTable st);
 Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE);
-
-
+Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
+    const Operator* op, SymbolTable st);
+Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
+    const Operator* op, SymbolTable st);
+Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
+    const Operator* op, SymbolTable st);
 
 
 /******************************************************************************
@@ -157,9 +161,10 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
 
     int nargs;
     for (nargs = 0; nargs < 3 && iconf.opr->opd_types[nargs] != OP_NONE; ++nargs);
+    Operand **vOps;
 
     if (nargs == 3) {
-        Operand **vOps = getOperands_3(&BS, &errC, iconf.opr, alias_table);
+        vOps = getOperands_3(&BS, &errC, iconf.opr, alias_table);
 
         if (vOps == NULL)
             return 0; //null pointer
@@ -179,7 +184,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
           ir.data->opd = operand_create_label(iconf.lb);
         }
     } else if (nargs == 1) {
-        Operand **vOps = getOperands_1(&BS, &errC, iconf.opr, alias_table);
+        vOps = getOperands_1(&BS, &errC, iconf.opr, alias_table);
         if (vOps == NULL) {
             return 0; //null pointer
         }
@@ -203,15 +208,14 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
           InsertionResult ir = stable_insert(alias_table, iconf.lb);
           ir.data->opd = operand_create_label(iconf.lb);
         }
+        for(int i = 0; i < 3; vOps[i] = NULL, i++);
       }
-
-      *instr = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
-      return 1;
-
-    return 0;
+    *instr = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
+    return 1;
 }
 
-Operand **getOperands_1(BufferStorage* bs, errContainer *errC, const Operator* op, SymbolTable st){
+Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
+    const Operator* op, SymbolTable st){
   int i = 0;
   int commas = 0;
   for (i = bs->x; i < bs->B->i-1; commas += (bs->B->data[i++] == ',') ? 1 : 0);
@@ -323,7 +327,8 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC, const Operator* o
   return ops;
 }
 
-Operand **getOperands_2(BufferStorage* bs, errContainer *errC, const Operator* op, SymbolTable st){
+Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
+    const Operator* op, SymbolTable st){
   int i = 0;
   int commas = 0;
   for (i = bs->x; i < bs->B->i-1; commas += (bs->B->data[i++] == ',') ? 1 : 0);
@@ -393,7 +398,8 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC, const Operator* o
     return ops;
 }
 
-Operand **getOperands_3(BufferStorage* bs, errContainer *errC, const Operator* op, SymbolTable st){
+Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
+    const Operator* op, SymbolTable st){
   int i = 0;
   int commas = 0;
   for (i = bs->x; i < bs->B->i-1; commas += (bs->B->data[i++] == ',') ? 1 : 0);
