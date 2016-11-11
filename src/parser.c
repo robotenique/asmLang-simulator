@@ -70,7 +70,7 @@ char *trimComment(char *text);
 Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st);
 Operand* isRegister(char* oprd, SymbolTable st);
-Operand* isByte_1(char* oprd, SymbolTable st);
+Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE);
 
 
 
@@ -161,15 +161,13 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     if (nargs == 3) {
         Operand **vOps = getOperands_3(&BS, &errC, iconf.opr, alias_table);
 
-        if (vOps == NULL) {
+        if (vOps == NULL)
             return 0; //null pointer
-        }
 
         if (iconf.label) {
           InsertionResult ir = stable_insert(alias_table, iconf.lb);
           ir.data->opd = operand_create_label(iconf.lb);
-        }       
-        return 1;
+        }
     } else if (nargs == 2) {
         Operand **vOps = getOperands_2(&BS, &errC, iconf.opr, alias_table);
 
@@ -179,38 +177,33 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         if (iconf.label) {
           InsertionResult ir = stable_insert(alias_table, iconf.lb);
           ir.data->opd = operand_create_label(iconf.lb);
-        }   
-      } else if (nargs == 1) {
+        }
+    } else if (nargs == 1) {
         Operand **vOps = getOperands_1(&BS, &errC, iconf.opr, alias_table);
         if (vOps == NULL) {
             return 0; //null pointer
         }
         if (iconf.label) {
           InsertionResult ir = stable_insert(alias_table, iconf.lb);
-
           if (iconf.opr -> opcode == STR) {
             ir.data->opd = operand_create_string(vOps[0] -> value.str);
           } else if (iconf.opr -> opcode == IS) {
             if (vOps[0] -> type == REGISTER) {
               ir.data->opd = operand_create_register(vOps[0] -> value.reg);
-            }
-
+            } else {
             ir.data->opd = operand_create_number(vOps[0] -> value.num);
+            }
           } else {
             ir.data->opd = operand_create_label(iconf.lb);
-          } 
+          }
         }
       }
-      else {
-        //Operador NOP | rt rt    rt X ty,   tyt   ,    t :rt rt rt X ty,tyt,t
-        // |LABEL NOP|
+      else { //NOP OPERATOR
         if (iconf.label) {
           InsertionResult ir = stable_insert(alias_table, iconf.lb);
           ir.data->opd = operand_create_label(iconf.lb);
         }
       }
-
-        
 
       *instr = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
       return 1;
@@ -256,25 +249,25 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC, const Operator* o
         errC -> pos = bs -> x;
         return NULL;
       }
-      printf("REGISTER!\n");
+      printf("LABEL!\n");
       break;
     case BYTE3:
-      if ((ops[i] = isByte_3(oprds[i], st, 0) == NULL)){
+      if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE3) == NULL)){
         errC -> errMsg = estrdup("Invalid operand found.\n");
         errC -> pos = bs -> x;
         return NULL;
       }
-      
+      printf("BYTE3!\n");
       break;
     case ADDR3:
       if((ops[i] = isLabel(oprds[i], st)) == NULL){
-        if ((ops[i] = isByte_3(oprds[i], st, 1)) == NULL) {
+        if ((ops[i] = isByte(oprds[i], st, 1, LIMBYTE3)) == NULL) {
           errC -> errMsg = estrdup("Invalid operand found.\n");
           errC -> pos = bs -> x;
-          return NULL; 
+          return NULL;
         }
       }
-
+      printf("ADDR3!\n");
       break;
     case REGISTER:
       if ((ops[i] = isRegister(oprds[i], st)) == NULL) {
@@ -285,7 +278,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC, const Operator* o
       printf("REGISTER!\n");
       break;
     case BYTE1:
-      if ((ops[i] = isByte_1(oprds[i], st)) == NULL) {
+      if ((ops[i] = isByte(oprds[i], st,  0, LIMBYTE1)) == NULL) {
         errC -> errMsg = estrdup("Invalid operand found.\n");
         errC -> pos = bs -> x;
         return NULL;
@@ -303,23 +296,23 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC, const Operator* o
       break;
 
     case TETRABYTE | NEG_NUMBER:
-      if ((ops[i] = isByte_4(oprds[i], st, 1)) == NULL) {
+      if ((ops[i] = isByte(oprds[i], st, 1, 0, LIMTETRA)) == NULL) {
         errC -> errMsg = estrdup("Invalid operand found.\n");
         errC -> pos = bs -> x;
         return NULL;
       }
 
-      printf("BYTE4!\n");
+      printf("TETRABYTE | NEG_NUMBER!\n");
       break;
 
     case REGISTER | TETRABYTE | NEG_NUMBER:
-      if ((ops[i] = isRegister(oprds[i], st)) == NULL)
-        if ((ops[i] = isByte_4(oprds[i], st, 1)) == NULL) {
-          errC -> errMsg = estrdup("Invalid operand found.\n");
-          errC -> pos = bs -> x;
-          return NULL;
-        }
-
+        if ((ops[i] = isRegister(oprds[i], st)) == NULL)
+            if ((ops[i] = isByte(oprds[i], st, 1, LIMTETRA)) == NULL) {
+                errC -> errMsg = estrdup("Invalid operand found.\n");
+                errC -> pos = bs -> x;
+                return NULL;
+            }
+        printf("REGISTER | TETRABYTE | NEG_NUMBER!\n");
       break;
 
     default:
@@ -376,7 +369,7 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC, const Operator* o
         break;
       case ADDR2:
         if ((ops[i] = isLabel(oprds[i], st)) == NULL) {
-          if ((ops[i] = isByte_2(oprds[i], st, 1) == NULL)){
+          if ((ops[i] = isByte(oprds[i], st, 1, LIMBYTE2) == NULL)){
             errC -> errMsg = estrdup("Invalid operand found.\n");
             errC -> pos = bs -> x;
             return NULL;
@@ -385,10 +378,10 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC, const Operator* o
 
         break;
       case BYTE2:
-        if ((ops[i] = isByte_2(oprds[i], st, 0)) == NULL) {
+        if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE2)) == NULL) {
           errC -> errMsg = estrdup("Invalid operand found.\n");
           errC -> pos = bs -> x;
-          return NULL; 
+          return NULL;
         }
 
         break;
@@ -444,8 +437,7 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC, const Operator* o
         printf("REGISTER!\n");
         break;
       case BYTE1:
-        ops[i] = isByte_1(oprds[i], st);
-        if (ops[i] == NULL) {
+        if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE1)) == NULL) {
           errC -> errMsg = estrdup("Invalid operand found.\n");
           errC -> pos = bs -> x;
           return NULL;
@@ -453,14 +445,13 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC, const Operator* o
         printf("BYTE1!\n");
         break;
       case IMMEDIATE:
-        if ((ops[i] = isRegister(oprds[i], st)) == NULL) {
-          if ((ops[i] = isByte_1(oprds[i], st)) == NULL) {
+        if ((ops[i] = isRegister(oprds[i], st, 0, LIMBYTE1)) == NULL) {
+          if ((ops[i] = isByte(oprds[i], st)) == NULL) {
             errC -> errMsg = estrdup("Invalid operand found.\n");
             errC -> pos = bs -> x;
-            return NULL; 
+            return NULL;
           }
         }
-
         break;
       default:
         break;
@@ -500,140 +491,35 @@ Operand* isLabel(char* oprd, SymbolTable st){
   return NULL;
 }
 
-Operand* isByte_1(char* oprd, SymbolTable st){
+Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE){
   if (strcmp(oprd, "0") == 0) {
     return operand_create_number(0);
   }
   char* check;
-  long long int n = strtoll(oprd, &check, 10);
+  octa n = strtoll(oprd, &check, 10);
   if (errno == ERANGE) return NULL;
 
     if (oprd[0] == '#') {
         if (strlen(oprd) >= 2) {
-            n = strtoll(oprd+1, &check, 16);
+            n = strtoll(oprd + 1, &check, 16);
             if (errno == ERANGE) return NULL;
             if (*check == '\0')
-                if (n >= 0 && n <= LIMBYTE1)
-                    return operand_create_number((octa) n);
+                if (n >= -LIMBYTE*neg && n <= LIMBYTE)
+                    return operand_create_number(n);
         }
     return NULL;
     }
     if (*check == '\0') {
-        if (n >= 0 && n <= LIMBYTE1)
-            return operand_create_number((octa) n);
+        if (n >= -LIMBYTE*neg && n <= LIMBYTE)
+            return operand_create_number(n);
     }
     else {
     EntryData *ed = stable_find(st, oprd);
     if (ed != NULL)
-        if (ed -> opd -> type == NUMBER_TYPE)
-            if (ed -> opd -> value.num >= 0 && ed -> opd -> value.num <= LIMBYTE1)
-                return operand_create_number((octa) ed -> opd -> value.num);
-  }
-  return NULL;
-}
-
-Operand* isByte_2(char* oprd, SymbolTable st, int neg){
-  if (strcmp(oprd, "0") == 0) {
-    return operand_create_number(0);
-  }
-  char* check;
-  long long int n = strtoll(oprd, &check, 10);
-
-  if (errno == ERANGE) return NULL;
-
-    if (oprd[0] == '#') {
-        if (strlen(oprd) >= 2) {
-            n = strtoll(oprd+1, &check, 16);
-
-            if (errno == ERANGE) return NULL;
-
-            if (*check == '\0')
-                if (n >= -LIMBYTE2*neg && n <= LIMBYTE2-1)
-                    return operand_create_number((octa) n);
-        }
-        
-        return NULL;
-    }
-
-    if (*check == '\0') {
-        if (n >= -LIMBYTE2*neg && n <= LIMBYTE2-1)
-            return operand_create_number((octa) n);
-    }
-    else {
-    EntryData *ed = stable_find(st, oprd);
-    if (ed != NULL)
-        if (ed -> opd -> type == NUMBER_TYPE)
-            if (ed -> opd -> value.num >= -LIMBYTE2*neg && ed -> opd -> value.num <= LIMBYTE2-1)
-                return operand_create_number((octa) ed -> opd -> value.num);
-  }
-  return NULL;
-}
-
-Operand* isByte_3(char* oprd, SymbolTable st, int neg){
-  if (strcmp(oprd, "0") == 0) {
-    return operand_create_number(0);
-  }
-  char* check;
-  long long int n = strtoll(oprd, &check, 10);
-
-  if (errno == ERANGE) return NULL;
-
-    if (oprd[0] == '#') {
-        if (strlen(oprd) >= 2) {
-            n = strtoll(oprd+1, &check, 16);
-            if (errno == ERANGE) return NULL;
-            if (*check == '\0')
-                if (n >= -LIMBYTE3*neg && n <= LIMBYTE3-1)
-                    return operand_create_number((octa) n);
-        }
-        
-        return NULL;
-    }
-
-    if (*check == '\0') {
-        if (n >= -LIMBYTE3*neg && n <= LIMBYTE3-1)
-            return operand_create_number((octa) n);
-    }
-    else {
-    EntryData *ed = stable_find(st, oprd);
-    if (ed != NULL)
-        if (ed -> opd -> type == NUMBER_TYPE)
-            if (ed -> opd -> value.num >= -LIMBYTE3*neg && ed -> opd -> value.num <= LIMBYTE3-1)
-                return operand_create_number((octa) ed -> opd -> value.num);
-  }
-  return NULL;
-}
-
-Operand* isByte_4(char* oprd, SymbolTable st, int neg){
-  if (strcmp(oprd, "0") == 0) {
-    return operand_create_number(0);
-  }
-  char* check;
-  long long int n = strtoll(oprd, &check, 10);
-  if (errno == ERANGE) return NULL;
-
-    if (oprd[0] == '#') {
-        if (strlen(oprd) >= 2) {
-            n = strtoll(oprd+1, &check, 16);
-            if (errno == ERANGE) return NULL;
-            if (*check == '\0')
-                if (n >= -LIMTETRA*neg && n <= LIMTETRA-1)
-                    return operand_create_number((octa) n);
-        }
-        
-        return NULL;
-    }
-
-    if (*check == '\0') {
-        if (n >= -LIMTETRA*neg && n <= LIMTETRA-1)
-            return operand_create_number((octa) n);
-    }
-    else {
-    EntryData *ed = stable_find(st, oprd);
-    if (ed != NULL)
-        if (ed -> opd -> type == NUMBER_TYPE)
-            if (ed -> opd -> value.num >= -LIMTETRA*neg && ed -> opd -> value.num <= LIMTETRA-1)
-                return operand_create_number((octa) ed -> opd -> value.num);
+        if (ed->opd->type == NUMBER_TYPE)
+            if (ed->opd->value.num >= -LIMBYTE*neg &&
+                ed->opd->value.num <= LIMBYTE)
+                return operand_create_number(ed->opd->value.num);
   }
   return NULL;
 }
@@ -667,8 +553,6 @@ Operand* isRegister(char* oprd, SymbolTable st){
   return NULL;
 }
 
-
-
 bool isOprInvalid(const Operator *op, errContainer *errC) {
     if(op->opcode == IS) {
         errC = emalloc(sizeof(errContainer));
@@ -677,27 +561,11 @@ bool isOprInvalid(const Operator *op, errContainer *errC) {
     }
     return false;
 }
-
 bool containsLabel(SymbolTable alias_table, const char *label) {
     if(stable_find(alias_table, label))
         return true;
     return false;
 }
-/*
-bool addLabel(SymbolTable alias_table, const char *label, errContainer *errC,
-            Operand *opr) {
-    errC = emalloc(sizeof(errContainer));
-    InsertionResult ir = stable_insert(alias_table, label);
-    if(ir.new == 0) {
-        errC->errMsg = estrdup("Label already defined!");
-        errC->isErr = true;
-        return false;
-    }
-    free(errC);
-    return true;
-}
-*/
-
 InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     int i;
     errC = emalloc(sizeof(errContainer));
@@ -738,8 +606,6 @@ InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     free(errC);
     return ret;
 }
-
-
 void errLabel(BufferStorage BS) {
     printf("NOICE\n");
 }
@@ -756,7 +622,6 @@ bool isEOL(BufferStorage BS) {
         return true;
     return false;
 }
-
 char *cutSpc(char *text) {
    int length, c, d;
    char *start;
@@ -787,14 +652,12 @@ char *cutSpc(char *text) {
 
    return trimSpc(trimComment(start));
 }
-
 char *trimSpc(char *c) {
     char * e = c + strlen(c) - 1;
     while(*c && isspace(*c)) c++;
     while(e > c && isspace(*e)) *e-- = '\0';
     return c;
 }
-
 char *trimComment(char *text) {
     int i;
     for(i = 0; text[i] && text[i] != '*'; i++);

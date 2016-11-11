@@ -48,10 +48,6 @@ int main(int argc, char const *argv[]) {
             token = strtok (NULL, ";");
         }
 
-        // TODO: Separar as strings pelo ';', e mandar
-        // cada uma independentemente para o parser (Sem o ';')
-        // Se ainda houver linha, adiciona-la
-
         while (first -> next != NULL) {
             printf("Send = |%s|\n",(first -> next) -> s);
             parse((first -> next) -> s, st, &instList, &errStr);
