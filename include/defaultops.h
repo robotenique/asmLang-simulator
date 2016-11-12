@@ -1,5 +1,9 @@
 #ifndef __DEFAULTOPS_H__
 #define __DEFAULTOPS_H__
+#include "asmtypes.h"
+#include "opcodes.h"
+#include "optable.h"
+#include "error.h"
 
 typedef enum {false, true} bool;
 
@@ -17,12 +21,6 @@ typedef struct node{
 string *end;
 string *first;
 
-void insert(char *ss) {
-    string *new = malloc(sizeof(string));
-    new -> s = estrdup(ss);
-    new -> next = NULL;
-    end -> next = new;
-    end = end -> next;
-}
+bool isConditional(const Operator *op);
 
 #endif

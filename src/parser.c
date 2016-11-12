@@ -19,12 +19,14 @@
 #include "../include/opcodes.h"
 #include "../include/optable.h"
 #include "../include/parser.h"
+#include "../include/defaultops.h"
+
 #define LIMBYTE1 ((1UL << 8) - 1)
 #define LIMBYTE2 ((1UL << 16) - 1)
 #define LIMBYTE3 ((1UL << 24) - 1)
 #define LIMTETRA ((1UL << 32) - 1)
 
-typedef enum {false, true} bool;
+
 
 typedef struct BufferStorage {
     Buffer *B;
@@ -62,7 +64,6 @@ bool isEmptyLine (BufferStorage BS);
 bool isValidChar(char c);
 bool containsLabel(SymbolTable alias_table, const char *label);
 bool isOprInvalid(const Operator *op, errContainer *errC);
-bool isConditional(const Operator *op);
 InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC);
 Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st);
@@ -160,7 +161,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         }
         else {
             errC.pos = BS.x;
-            set_error_msg("Duplicate label assignment!");
+            set_error_msg("Double label assignment!");
             return 0;
         }
     }
@@ -173,52 +174,50 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     vOps = emalloc(sizeof(Operand *));
     for(int i = 0; i < 3; i++)
         vOps[i] = NULL;
-
-    if (nargs == 3) {
-        vOps = getOperands_3(&BS, &errC, iconf.opr, alias_table);
-        if (vOps == NULL) return 0;
-
-
-        if (iconf.label) {
-          InsertionResult ir = stable_insert(alias_table, iconf.lb);
-          ir.data->opd = operand_create_label(iconf.lb);
-        }
-    } else if (nargs == 2) {
-        Operand **vOps = getOperands_2(&BS, &errC, iconf.opr, alias_table);
-        if (vOps == NULL) return 0;
-
-        if (iconf.label) {
-          InsertionResult ir = stable_insert(alias_table, iconf.lb);
-          ir.data->opd = operand_create_label(iconf.lb);
-        }
-    } else if (nargs == 1) {
-        vOps = getOperands_1(&BS, &errC, iconf.opr, alias_table);
-        if (vOps == NULL) return 0;
-        if (iconf.label) {
-          InsertionResult ir = stable_insert(alias_table, iconf.lb);
-          if (iconf.opr -> opcode == STR) {
-            ir.data->opd = operand_create_string(vOps[0] -> value.str);
-          } else if (iconf.opr -> opcode == IS) {
-            if (vOps[0] -> type == REGISTER) {
-              ir.data->opd = operand_create_register(vOps[0] -> value.reg);
-            } else {
-            ir.data->opd = operand_create_number(vOps[0] -> value.num);
+    switch (nargs) {
+        case 3:
+            vOps = getOperands_3(&BS, &errC, iconf.opr, alias_table);
+            if (vOps == NULL) return 0;
+            if (iconf.label) {
+                InsertionResult ir = stable_insert(alias_table, iconf.lb);
+                ir.data->opd = operand_create_label(iconf.lb);
             }
-          } else {
-            ir.data->opd = operand_create_label(iconf.lb);
-          }
-        }
-      }
-      else { //NOP OPERATOR
-        if (iconf.label) {
-          InsertionResult ir = stable_insert(alias_table, iconf.lb);
-          ir.data->opd = operand_create_label(iconf.lb);
-        }
-      }
-    Instruction * newInst;
-    if(vOps == NULL) {
-        printf("BUGUEI\n");
+        break;
+        case 2:
+            vOps = getOperands_2(&BS, &errC, iconf.opr, alias_table);
+            if (vOps == NULL) return 0;
+            if (iconf.label) {
+                InsertionResult ir = stable_insert(alias_table, iconf.lb);
+                ir.data->opd = operand_create_label(iconf.lb);
+            }
+        break;
+        case 1:
+            vOps = getOperands_1(&BS, &errC, iconf.opr, alias_table);
+            if (vOps == NULL) return 0;
+            if (iconf.label) {
+                InsertionResult ir = stable_insert(alias_table, iconf.lb);
+                if (iconf.opr -> opcode == STR) {
+                    ir.data->opd = operand_create_string(vOps[0] -> value.str);
+                }
+                else if (iconf.opr -> opcode == IS) {
+                    if (vOps[0] -> type == REGISTER)
+                        ir.data->opd = operand_create_register(vOps[0] -> value.reg);
+                    else
+                        ir.data->opd = operand_create_number(vOps[0] -> value.num);
+                }
+                else
+                    ir.data->opd = operand_create_label(iconf.lb);
+            }
+        break;
+        default:
+            //NOP OPERATOR
+            if (iconf.label) {
+                InsertionResult ir = stable_insert(alias_table, iconf.lb);
+                ir.data->opd = operand_create_label(iconf.lb);
+            }
+        break;
     }
+    Instruction * newInst;
     newInst = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
     if(*instr != NULL)
         (*instr)->next = newInst;
@@ -374,10 +373,8 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
         case ADDR2:
             if ((ops[i] = isLabel(oprds[i], st)) == NULL) {
                 if ((ops[i] = isByte(oprds[i], st, 1, LIMBYTE2)) == NULL) {
-                    if(isConditional(op)) {
-                        printf("criando para: %s, label (%s)\n",op->name,oprds[i]);
+                    if(isConditional(op))
                         ops[i] = operand_create_label(oprds[i]);
-                    }
                     else {
                         errC -> pos = bs -> x;
                         return NULL;
@@ -597,34 +594,6 @@ bool isOprInvalid(const Operator *op, errContainer *errC) {
         return true;
     }
     return false;
-}
-bool isConditional(const Operator *op) {
-    switch (op->opcode) {
-        case CALL:
-            return true;
-        case GETA:
-            return true;
-        case GO:
-            return true;
-        case JMP:
-            return true;
-        case EXTERN:
-            return true;
-        case JN:
-            return true;
-        case JNN:
-            return true;
-        case JNP:
-            return true;
-        case JNZ:
-            return true;
-        case JP:
-            return true;
-        case JZ:
-            return true;
-        default:
-            return false;
-    }
 }
 bool containsLabel(SymbolTable alias_table, const char *label) {
     if(stable_find(alias_table, label))
