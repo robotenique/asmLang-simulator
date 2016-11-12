@@ -24,11 +24,13 @@
 void printOperands(Operand **opds);
 char *removeNL(char *str);
 
+typedef Instruction **pointer;
 
 int main(int argc, char const *argv[]) {
     Buffer *B = buffer_create();
     SymbolTable st = stable_create();
-    Instruction * instList;
+    Instruction ** instList;
+    instList = emalloc(sizeof(Instruction*));
     int parseResult;
     char *tmp = estrdup("");
     const char *errStr;
@@ -54,25 +56,29 @@ int main(int argc, char const *argv[]) {
             token = strtok (NULL, ";");
         }
         while (first -> next != NULL) {
+            printf("\n++++++++++++++++++++++++++++++++++++++++++++++++\n");
             printf("Send = |%s|\n",(first -> next) -> s);
-            parseResult = parse((first->next)->s, st, &instList, &errStr);
+            parseResult = parse((first->next)->s, st, instList, &errStr);
             lineCount++;
             if(parseResult) {
-                tmp = removeNL((first->next)->s);
-                printf("=============PARSED============\n");
-                printf("LINE = %s\n",tmp);
-                printf("LABEL = %s\n",(tmp = (instList->label ? instList->label : "n/a")));
-                printf("OPERATOR = %s\n",instList->op->name);
-                printOperands(instList->opds);
+                if(*instList) {
+                    tmp = removeNL((first->next)->s);
+                    printf("=============PARSED============\n");
+                    printf("LINE = %s\n",tmp);
+                    printf("LABEL = %s\n",(tmp = ((*instList)->label ? (*instList)->label : "n/a")));
+                    printf("OPERATOR = %s\n",(*instList)->op->name);
+                    printOperands((*instList)->opds);
+                }
             }
             else {
                 tmp = removeNL((first->next)->s);
                 printf("\n=============FOUND ERROR=============\n");
                 printf("line %d: \"%s\"\n",lineCount, tmp);
                 print_error_msg(NULL);
+                set_error_msg("NULL");
             }
             first = first->next;
-            
+
         }
         buffer_reset(B);
     }
@@ -81,25 +87,29 @@ int main(int argc, char const *argv[]) {
 
 void printOperands(Operand **opds) {
     printf("OPERANDS = ");
+    int lim;
+    for(lim = 0; opds[lim]; lim++);
     for(int i = 0; i < 3; i++) {
         char *tmp;
-        if(i == 2) tmp = ";";
+        if(i == lim - 1) tmp = ";";
         else tmp = estrdup(", ");
-        switch (opds[i]->type) {
-            case REGISTER:
-                printf("Register(%d)%s",opds[i]->value.reg, tmp);
-                break;
-            case NUMBER_TYPE:
-                printf("Number(%lli)%s",opds[i]->value.num, tmp);
-                break;
-            case LABEL:
-                printf("Label(%s)%s",opds[i]->value.label, tmp);
-                break;
-            case STRING:
-                printf("String(%s)%s",opds[i]->value.str, tmp);
-                break;
-            default:
-                continue;
+        if(opds[i] != NULL) {
+            switch (opds[i]->type) {
+                case REGISTER:
+                    printf("Register(%d)%s",opds[i]->value.reg, tmp);
+                    break;
+                case NUMBER_TYPE:
+                    printf("Number(%lli)%s",opds[i]->value.num, tmp);
+                    break;
+                case LABEL:
+                    printf("Label(%s)%s",opds[i]->value.label, tmp);
+                    break;
+                case STRING:
+                    printf("String(%s)%s",opds[i]->value.str, tmp);
+                    break;
+                default:
+                    continue;
+            }
         }
     }
     printf("\n");
