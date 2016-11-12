@@ -116,15 +116,16 @@ void parseEntry(Line *head) {
         }
         else if(parseResult == 1) {
             ptr->next = end;
-            ptr->lineno = p->number;
+            ptr->next->lineno = p->number;
             ptr = end;
         }
     }
+
     // If there's no error, check if all the labels are in the SymbolTable!
     int lineError = checkLabels(st, instHEAD);
     if(lineError > 0) {
+        printAllList(instHEAD, head, lineError - 1);
         for(p = head; p && p->number != lineError; p = p->next);
-        if(p == NULL)
         if(p)
             printf("\nline %d: %s\n",p->number, removeNL(p->line));
         print_error_msg(NULL);
@@ -142,8 +143,7 @@ void printAllList(Instruction *head, Line *headL, int times) {
     Line *q;
     p = head;
     q = headL;
-    int i = 0;
-    for(; p && q && i < times; p = p->next, q = q->next ,i++) {
+    for(;p && q && p->lineno <= times; p = p->next, q = q->next) {
         printf("\n");
         printf("LINE = %s\n",removeNL(q->line));
         printf("LABEL = %s\n",(p->label ? p->label : "n/a"));
@@ -224,12 +224,12 @@ int checkLabels(SymbolTable st, Instruction *head) {
             if(nargs == 1 && stable_find(st,p->opds[0]->value.label) == NULL){
                 set_error_msg("Error with %s operator: label \"%s\" never defined!",
                 p->op->name, p->opds[0]->value.label);
-                return p->lineno - 1;
+                return p->lineno;
             }
             else if(nargs == 2 && stable_find(st,p->opds[1]->value.label) == NULL) {
                 set_error_msg("Error with %s operator: label \"%s\" never defined!",
                 p->op->name, p->opds[1]->value.label);
-                return p->lineno - 1;
+                return p->lineno;
             }
         }
     }
