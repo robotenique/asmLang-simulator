@@ -94,6 +94,20 @@ Operand* isRegister(char* oprd, SymbolTable st);
  *
  *****************************************************************************/
 
+int posErr(char* source, char* raw, int pos) {
+  int i = -1;
+  int count = 0;
+  do {
+    if (!isspace(raw[++i])) count++;
+  } while (i != pos);
+
+  i = -1;
+  do {
+    if (!isspace(source[++i])) count--;
+  } while (count);
+
+  return i;
+}
 
 int parse(const char *s, SymbolTable alias_table, Instruction **instr,
           const char **errptr) {
@@ -127,6 +141,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         if(containsLabel(alias_table, (iAux->val).label)) {
             errC.pos = BS.x;
             set_error_msg("Label already defined!");
+            posErr(s, BS.B->data, BS.x);
             return 0;
         }
         iconf.label = true;
@@ -153,6 +168,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
             if(opr->opcode == EXTERN) {
                 errC.pos = BS.x;
                 set_error_msg("EXTERN operator can't be Labeled!");
+                posErr(s, BS.B->data, BS.x);
                 return 0;
             }
             iconf.operator = true;
@@ -161,6 +177,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         else {
             errC.pos = BS.x;
             set_error_msg("Duplicate label assignment!");
+            posErr(s, BS.B->data, BS.x);
             return 0;
         }
     }
