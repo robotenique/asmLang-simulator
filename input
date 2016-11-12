@@ -1,1 +1,5 @@
-JN          $20,finish
+EXTERN      readnum
+n       IS          $0
+ cmpr    IS          $1
+readnum     JMP start
+INT #80

@@ -26,6 +26,8 @@ void addLine(Line **head, char *line, int number);
 void parseEntry(Line *head);
 void printAllList(Instruction *head, Line *headL, int times);
 bool isEmpty(char *str);
+int checkLabels(SymbolTable st, Instruction *head);
+void insert(char *ss);
 
 
 int main(int argc, char const *argv[]) {
@@ -96,6 +98,7 @@ void parseEntry(Line *head) {
             print_error_msg(NULL);
             return;
         }
+        instHEAD->lineno = p->number;
         p = p->next;
     }
     ptr = instHEAD;
@@ -107,17 +110,32 @@ void parseEntry(Line *head) {
         if(parseResult == 0) {
             printAllList(instHEAD, head, ant->number);
             char *tmp = removeNL(p->line);
-            printf("\n=============FOUND ERROR=============\n");
-            printf("line %d: \"%s\"\n",p->number, tmp);
+            printf("\nline %d: \"%s\"\n",p->number, tmp);
             print_error_msg(NULL);
             return;
         }
         else if(parseResult == 1) {
             ptr->next = end;
+            ptr->next->lineno = p->number;
             ptr = end;
         }
     }
-    printAllList(instHEAD, head, ant->number);
+
+    // If there's no error, check if all the labels are in the SymbolTable!
+    int lineError = checkLabels(st, instHEAD);
+    if(lineError > 0) {
+        printAllList(instHEAD, head, lineError - 1);
+        for(p = head; p && p->number != lineError; p = p->next);
+        if(p)
+            printf("\nline %d: %s\n",p->number, removeNL(p->line));
+        print_error_msg(NULL);
+    }
+    else {
+        if(ant)
+            printAllList(instHEAD, head, ant->number);
+        else
+            printAllList(instHEAD, head, 10);
+    }
 }
 
 void printAllList(Instruction *head, Line *headL, int times) {
@@ -125,35 +143,14 @@ void printAllList(Instruction *head, Line *headL, int times) {
     Line *q;
     p = head;
     q = headL;
-    int i = 0;
-    for(; p && q && i <= times; p = p->next, q = q->next ,i++) {
-        printf("=============PARSED============\n");
+    for(;p && q && p->lineno <= times; p = p->next, q = q->next) {
+        printf("\n");
         printf("LINE = %s\n",removeNL(q->line));
         printf("LABEL = %s\n",(p->label ? p->label : "n/a"));
         printf("OPERATOR = %s\n",p->op->name);
         printOperands(p->opds);
     }
 }
-/*
-if(parseResult) {
-    if(*instList) {
-        tmp = removeNL((first->next)->s);
-        printf("=============PARSED============\n");
-        printf("LINE = %s\n",tmp);
-        printf("LABEL = %s\n",(tmp = ((*instList)->label ? (*instList)->label : "n/a")));
-        printf("OPERATOR = %s\n",(*instList)->op->name);
-        printOperands((*instList)->opds);
-    }
-}
-else {
-tmp = removeNL((first->next)->s);
-printf("\n=============FOUND ERROR=============\n");
-printf("line %d: \"%s\"\n",lineCount, tmp);
-print_error_msg(NULL);
-set_error_msg("NULL");
-}
-*/
-
 
 void printOperands(Operand **opds) {
     printf("OPERANDS = ");
@@ -216,4 +213,33 @@ bool isEmpty(char *str) {
     if(i == len)
         return true;
     return false;
+}
+
+int checkLabels(SymbolTable st, Instruction *head) {
+    Instruction *p;
+    for(p = head; p; p = p->next) {
+        if(isConditional(p->op)) {
+            int nargs;
+            for (nargs = 0; nargs < 3 && p->op->opd_types[nargs] != OP_NONE; ++nargs);
+            if(nargs == 1 && stable_find(st,p->opds[0]->value.label) == NULL){
+                set_error_msg("Error with %s operator: label \"%s\" never defined!",
+                p->op->name, p->opds[0]->value.label);
+                return p->lineno;
+            }
+            else if(nargs == 2 && stable_find(st,p->opds[1]->value.label) == NULL) {
+                set_error_msg("Error with %s operator: label \"%s\" never defined!",
+                p->op->name, p->opds[1]->value.label);
+                return p->lineno;
+            }
+        }
+    }
+    return -1;
+}
+
+void insert(char *ss) {
+    string *new = malloc(sizeof(string));
+    new -> s = estrdup(ss);
+    new -> next = NULL;
+    end -> next = new;
+    end = end -> next;
 }
