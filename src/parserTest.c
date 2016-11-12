@@ -23,18 +23,13 @@
 
 void printOperands(Operand **opds);
 char *removeNL(char *str);
+void addLine(Line **head, char *line, int number);
+void parseEntry(Line *head);
 
-typedef Instruction **pointer;
 
 int main(int argc, char const *argv[]) {
     Buffer *B = buffer_create();
-    SymbolTable st = stable_create();
-    InsertionResult ir;
-    Instruction ** instList;
-    instList = emalloc(sizeof(Instruction*));
-    int parseResult;
-    char *tmp = estrdup("");
-    const char *errStr;
+    Line *head = NULL;
     set_prog_name("parser");
     //if (argc != 2)
     //    die("Wrong number of arguments, aborting...");
@@ -43,21 +38,6 @@ int main(int argc, char const *argv[]) {
     if (input == NULL)
        die("Error opening file, aborting...");
     int lineCount = 0;
-    //TODO: setar os valores corretos em ir.data
-    ir = stable_insert(st, "rA");
-    ir.data->opd = operand_create_register(255);
-    ir = stable_insert(st, "rR");
-    ir.data->opd = operand_create_register(254);
-    ir = stable_insert(st, "rY");
-    ir.data->opd = operand_create_register(252);
-    ir = stable_insert(st, "rX");
-    ir.data->opd = operand_create_register(252);
-    ir = stable_insert(st, "rZ");
-    ir.data->opd = operand_create_register(250);
-    ir = stable_insert(st, "rSP");
-    ir.data->opd = operand_create_register(253);
-
-
     while (read_line(input, B)) {
         buffer_push_back(B,0);
 
@@ -72,34 +52,68 @@ int main(int argc, char const *argv[]) {
             token = strtok (NULL, ";");
         }
         while (first -> next != NULL) {
-            printf("\n++++++++++++++++++++++++++++++++++++++++++++++++\n");
-            printf("Send = |%s|\n",(first -> next) -> s);
-            parseResult = parse((first->next)->s, st, instList, &errStr);
             lineCount++;
-            if(parseResult) {
-                if(*instList) {
-                    tmp = removeNL((first->next)->s);
-                    printf("=============PARSED============\n");
-                    printf("LINE = %s\n",tmp);
-                    printf("LABEL = %s\n",(tmp = ((*instList)->label ? (*instList)->label : "n/a")));
-                    printf("OPERATOR = %s\n",(*instList)->op->name);
-                    printOperands((*instList)->opds);
-                }
-            }
-            else {
-                tmp = removeNL((first->next)->s);
-                printf("\n=============FOUND ERROR=============\n");
-                printf("line %d: \"%s\"\n",lineCount, tmp);
-                print_error_msg(NULL);
-                set_error_msg("NULL");
-            }
+            addLine(&head, first->next->s, lineCount);
             first = first->next;
-
         }
         buffer_reset(B);
     }
+    parseEntry(head);
     return 0;
 }
+
+void parseEntry(Line *head) {
+    SymbolTable st = stable_create();
+    InsertionResult ir;
+    Instruction ** instHEAD;
+    instHEAD = NULL;
+    int parseResult;
+    const char *errStr;
+    Line *p;
+    ir = stable_insert(st, "rA");
+    ir.data->opd = operand_create_register(255);
+    ir = stable_insert(st, "rR");
+    ir.data->opd = operand_create_register(254);
+    ir = stable_insert(st, "rY");
+    ir.data->opd = operand_create_register(252);
+    ir = stable_insert(st, "rX");
+    ir.data->opd = operand_create_register(252);
+    ir = stable_insert(st, "rZ");
+    ir.data->opd = operand_create_register(250);
+    ir = stable_insert(st, "rSP");
+    ir.data->opd = operand_create_register(253);
+    for(p = head; p; p = p->next) {
+        parseResult =  parse(p->line, st, instHEAD, &errStr);
+        if(parseResult == 0) {
+            char *tmp = removeNL(p->line);
+            printf("\n=============FOUND ERROR=============\n");
+            printf("line %d: \"%s\"\n",p->number, tmp);
+            print_error_msg(NULL);
+        }
+    }
+
+}
+
+/*
+if(parseResult) {
+    if(*instList) {
+        tmp = removeNL((first->next)->s);
+        printf("=============PARSED============\n");
+        printf("LINE = %s\n",tmp);
+        printf("LABEL = %s\n",(tmp = ((*instList)->label ? (*instList)->label : "n/a")));
+        printf("OPERATOR = %s\n",(*instList)->op->name);
+        printOperands((*instList)->opds);
+    }
+}
+else {
+tmp = removeNL((first->next)->s);
+printf("\n=============FOUND ERROR=============\n");
+printf("line %d: \"%s\"\n",lineCount, tmp);
+print_error_msg(NULL);
+set_error_msg("NULL");
+}
+*/
+
 
 void printOperands(Operand **opds) {
     printf("OPERANDS = ");
@@ -140,4 +154,17 @@ char *removeNL(char *str) {
             break;
         }
     return tmp;
+}
+
+void  addLine(Line **head, char *line, int number) {
+    Line *aux, *p, *new;
+    new = emalloc(sizeof(Line));
+    new->line = estrdup(line);
+    new->number = number;
+    for(aux = NULL, p = *head; p; aux = p, p = p->next);
+    if(aux == NULL)
+        *head = new;
+    else
+        aux->next = new;
+    new->next = NULL;
 }

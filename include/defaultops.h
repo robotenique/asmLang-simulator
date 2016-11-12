@@ -1,6 +1,12 @@
 #ifndef __DEFAULTOPS_H__
 #define __DEFAULTOPS_H__
 
+typedef struct line {
+    char *line;
+    int number;
+    struct line* next;
+} Line;
+
 typedef struct node{
     char* s;
     struct node* next;

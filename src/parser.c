@@ -75,6 +75,8 @@ Operand* isString(char* oprd);
 Operand* isLabel(char* oprd, SymbolTable st);
 Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE);
 Operand* isRegister(char* oprd, SymbolTable st);
+void addInstruction(Instruction ***end, Instruction *insT);
+
 
 /******************************************************************************
  * parser.c
@@ -217,7 +219,9 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
           ir.data->opd = operand_create_label(iconf.lb);
         }
       }
-    *instr = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
+    Instruction * newInst;
+    newInst = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
+    addInstruction(instr, newInst);
     return 1;
 }
 
@@ -685,6 +689,17 @@ InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     free(errC);
     return ret;
 }
+
+void addInstruction(Instruction ***end, Instruction *insT) {
+    Instruction **p, **ant;
+    // Add instruction to the end of the list
+    if(*end == NULL)
+        *end = insT;
+    else {
+        (*end)->next = insT;
+    }
+}
+
 bool isValidChar(char c)  {
     return c && (isalnum(c) || c == '_');
 }
