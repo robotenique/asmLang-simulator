@@ -14,7 +14,6 @@
 #include <errno.h>
 #include "../include/buffer.h"
 #include "../include/error.h"
-#include "../include/hash.h"
 #include "../include/asmtypes.h"
 #include "../include/mactypes.h"
 #include "../include/opcodes.h"
@@ -75,7 +74,6 @@ Operand* isString(char* oprd);
 Operand* isLabel(char* oprd, SymbolTable st);
 Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE);
 Operand* isRegister(char* oprd, SymbolTable st);
-void addInstruction(Instruction ***end, Instruction *insT);
 
 
 /******************************************************************************
@@ -115,8 +113,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     //Add the string to the buffer
     for (i = 0; str[i]!=0; buffer_push_back(BS.B, str[i]), i++);
     buffer_push_back(BS.B, 0);
-    printf("read = |%s|\n",BS.B->data);
-    if(isEmptyLine(BS)) return 1;
+    if(isEmptyLine(BS)) return -1;
     iAux = getLabelOrOperator(&BS, &errC);
     /* IF iAux == NULL, then it's an error, so errC contains
      * the position (in the string) where the error was found.
@@ -155,7 +152,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
             opr = (iAux->val).opr;
             if(opr->opcode == EXTERN) {
                 errC.pos = BS.x;
-                set_error_msg("EXTERN operator doesn't support Label!");
+                set_error_msg("EXTERN operator can't be Labeled!");
                 return 0;
             }
             iconf.operator = true;
@@ -188,7 +185,6 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         }
     } else if (nargs == 2) {
         Operand **vOps = getOperands_2(&BS, &errC, iconf.opr, alias_table);
-
         if (vOps == NULL) return 0;
 
         if (iconf.label) {
@@ -220,8 +216,13 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         }
       }
     Instruction * newInst;
+    if(vOps == NULL) {
+        printf("BUGUEI\n");
+    }
     newInst = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
-    addInstruction(instr, newInst);
+    if(*instr != NULL)
+        (*instr)->next = newInst;
+    *instr = newInst;
     return 1;
 }
 
@@ -246,7 +247,6 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
   }
 
   oprds[0] = trimSpc(oprds[0]);
-  printf("operandLex: |%s|\n",oprds[0] );
   int spaces = 0;
   for (int j = 0; oprds[0][j]; spaces += ((oprds[0][j++] == ' ') ? 1 : 0));
   if (spaces) {
@@ -351,7 +351,6 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
 
   for (int i = 0; i < 2; i++) {
     oprds[i] = trimSpc(oprds[i]);
-    printf("operandLex: |%s|\n",oprds[i] );
     int spaces = 0;
     for (int j = 0; oprds[i][j]; spaces += ((oprds[i][j++] == ' ') ? 1 : 0));
     if (spaces) {
@@ -362,7 +361,7 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
   }
 
   Operand** ops = emalloc(3*sizeof(Operand*));
-
+  ops[2] = NULL;
   for (int i = 0; i < 2; i++)
     switch (op -> opd_types[i]) {
       case REGISTER:
@@ -375,8 +374,10 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
         case ADDR2:
             if ((ops[i] = isLabel(oprds[i], st)) == NULL) {
                 if ((ops[i] = isByte(oprds[i], st, 1, LIMBYTE2)) == NULL) {
-                    if(isConditional(op))
+                    if(isConditional(op)) {
+                        printf("criando para: %s, label (%s)\n",op->name,oprds[i]);
                         ops[i] = operand_create_label(oprds[i]);
+                    }
                     else {
                         errC -> pos = bs -> x;
                         return NULL;
@@ -393,8 +394,6 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
       default:
             break;
     }
-    ops[2] = NULL;
-
     return ops;
 }
 
@@ -420,7 +419,6 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
   }
   for (int i = 0; i < 3; i++) {
     oprds[i] = trimSpc(oprds[i]);
-    printf("operandLex: |%s|\n",oprds[i] );
     int spaces = 0;
     for (int j = 0; oprds[i][j]; spaces += ((oprds[i][j++] == ' ') ? 1 : 0));
     if (spaces) {
@@ -441,14 +439,12 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
           errC -> pos = bs -> x;
           return NULL;
         }
-        printf("REGISTER!\n");
         break;
       case BYTE1:
         if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE1)) == NULL) {
           errC -> pos = bs -> x;
           return NULL;
         }
-        printf("BYTE1!\n");
         break;
       case IMMEDIATE:
         if ((ops[i] = isRegister(oprds[i], st)) == NULL) {
@@ -688,16 +684,6 @@ InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     free(str);
     free(errC);
     return ret;
-}
-
-void addInstruction(Instruction ***end, Instruction *insT) {
-    Instruction **p, **ant;
-    // Add instruction to the end of the list
-    if(*end == NULL)
-        *end = insT;
-    else {
-        (*end)->next = insT;
-    }
 }
 
 bool isValidChar(char c)  {

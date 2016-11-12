@@ -12,7 +12,6 @@
 #include <mcheck.h>
 #include "../include/buffer.h"
 #include "../include/error.h"
-#include "../include/hash.h"
 #include "../include/asmtypes.h"
 #include "../include/mactypes.h"
 #include "../include/opcodes.h"
@@ -25,6 +24,8 @@ void printOperands(Operand **opds);
 char *removeNL(char *str);
 void addLine(Line **head, char *line, int number);
 void parseEntry(Line *head);
+void printAllList(Instruction *head, Line *headL, int times);
+bool isEmpty(char *str);
 
 
 int main(int argc, char const *argv[]) {
@@ -53,7 +54,8 @@ int main(int argc, char const *argv[]) {
         }
         while (first -> next != NULL) {
             lineCount++;
-            addLine(&head, first->next->s, lineCount);
+            if(!isEmpty(first->next->s))
+                addLine(&head, first->next->s, lineCount);
             first = first->next;
         }
         buffer_reset(B);
@@ -65,11 +67,12 @@ int main(int argc, char const *argv[]) {
 void parseEntry(Line *head) {
     SymbolTable st = stable_create();
     InsertionResult ir;
-    Instruction ** instHEAD;
+    Instruction *instHEAD, *end, *ptr;
     instHEAD = NULL;
+    end = NULL;
     int parseResult;
     const char *errStr;
-    Line *p;
+    Line *p, *ant;
     ir = stable_insert(st, "rA");
     ir.data->opd = operand_create_register(255);
     ir = stable_insert(st, "rR");
@@ -82,18 +85,55 @@ void parseEntry(Line *head) {
     ir.data->opd = operand_create_register(250);
     ir = stable_insert(st, "rSP");
     ir.data->opd = operand_create_register(253);
-    for(p = head; p; p = p->next) {
-        parseResult =  parse(p->line, st, instHEAD, &errStr);
+    p = head;
+    // Get the head of the linked list
+    if(p != NULL) {
+        parseResult =  parse(p->line, st, &instHEAD, &errStr);
         if(parseResult == 0) {
             char *tmp = removeNL(p->line);
             printf("\n=============FOUND ERROR=============\n");
             printf("line %d: \"%s\"\n",p->number, tmp);
             print_error_msg(NULL);
+            return;
+        }
+        p = p->next;
+    }
+    ptr = instHEAD;
+    ant = p;
+    // The end has the same pointer as the head
+    for(; p; ant = p, p = p->next) {
+        end = NULL;
+        parseResult =  parse(p->line, st, &end, &errStr);
+        if(parseResult == 0) {
+            printAllList(instHEAD, head, ant->number);
+            char *tmp = removeNL(p->line);
+            printf("\n=============FOUND ERROR=============\n");
+            printf("line %d: \"%s\"\n",p->number, tmp);
+            print_error_msg(NULL);
+            return;
+        }
+        else if(parseResult == 1) {
+            ptr->next = end;
+            ptr = end;
         }
     }
-
+    printAllList(instHEAD, head, ant->number);
 }
 
+void printAllList(Instruction *head, Line *headL, int times) {
+    Instruction *p;
+    Line *q;
+    p = head;
+    q = headL;
+    int i = 0;
+    for(; p && q && i <= times; p = p->next, q = q->next ,i++) {
+        printf("=============PARSED============\n");
+        printf("LINE = %s\n",removeNL(q->line));
+        printf("LABEL = %s\n",(p->label ? p->label : "n/a"));
+        printf("OPERATOR = %s\n",p->op->name);
+        printOperands(p->opds);
+    }
+}
 /*
 if(parseResult) {
     if(*instList) {
@@ -118,10 +158,10 @@ set_error_msg("NULL");
 void printOperands(Operand **opds) {
     printf("OPERANDS = ");
     int lim;
-    for(lim = 0; opds[lim]; lim++);
+    for(lim = 0;lim < 3 && opds[lim]; lim++);
     for(int i = 0; i < 3; i++) {
         char *tmp;
-        if(i == lim - 1) tmp = ";";
+        if(i == lim - 1) tmp = estrdup(";");
         else tmp = estrdup(", ");
         if(opds[i] != NULL) {
             switch (opds[i]->type) {
@@ -167,4 +207,13 @@ void  addLine(Line **head, char *line, int number) {
     else
         aux->next = new;
     new->next = NULL;
+}
+
+bool isEmpty(char *str) {
+    int len = strlen(str);
+    int i;
+    for(i = 0; str[i] && isspace(str[i]); i++);
+    if(i == len)
+        return true;
+    return false;
 }

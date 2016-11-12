@@ -1,6 +1,8 @@
 #ifndef __DEFAULTOPS_H__
 #define __DEFAULTOPS_H__
 
+typedef enum {false, true} bool;
+
 typedef struct line {
     char *line;
     int number;
