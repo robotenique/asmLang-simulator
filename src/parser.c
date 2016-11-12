@@ -63,6 +63,7 @@ bool isEmptyLine (BufferStorage BS);
 bool isValidChar(char c);
 bool containsLabel(SymbolTable alias_table, const char *label);
 bool isOprInvalid(const Operator *op, errContainer *errC);
+bool isConditional(const Operator *op);
 InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC);
 Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st);
@@ -255,8 +256,12 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
   switch (op -> opd_types[0]) {
     case LABEL:
       if ((ops[0] = isLabel(oprds[0], st)) == NULL) {
-        errC -> pos = bs -> x;
-        return NULL;
+        if(isConditional(op))
+            ops[0] = operand_create_label(oprds[0]);
+        else {
+            errC -> pos = bs -> x;
+            return NULL;
+        }
       }
       break;
     case BYTE3:
@@ -268,8 +273,12 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
     case ADDR3:
       if((ops[0] = isLabel(oprds[0], st)) == NULL){
         if ((ops[0] = isByte(oprds[0], st, 1, LIMBYTE3)) == NULL) {
-          errC -> pos = bs -> x;
-          return NULL;
+            if(isConditional(op))
+                ops[0] = operand_create_label(oprds[0]);
+            else {
+                errC -> pos = bs -> x;
+                return NULL;
+            }
         }
       }
       break;
@@ -361,10 +370,14 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
         break;
         case ADDR2:
             if ((ops[i] = isLabel(oprds[i], st)) == NULL) {
-                if ((ops[i] = isByte(oprds[i], st, 1, LIMBYTE2)) == NULL){
-                    errC -> pos = bs -> x;
-                    return NULL;
+                if ((ops[i] = isByte(oprds[i], st, 1, LIMBYTE2)) == NULL) {
+                    if(isConditional(op))
+                        ops[i] = operand_create_label(oprds[i]);
+                    else {
+                        errC -> pos = bs -> x;
+                        return NULL;
                     }
+                }
             }
             break;
       case BYTE2:
@@ -584,6 +597,34 @@ bool isOprInvalid(const Operator *op, errContainer *errC) {
         return true;
     }
     return false;
+}
+bool isConditional(const Operator *op) {
+    switch (op->opcode) {
+        case CALL:
+            return true;
+        case GETA:
+            return true;
+        case GO:
+            return true;
+        case JMP:
+            return true;
+        case EXTERN:
+            return true;
+        case JN:
+            return true;
+        case JNN:
+            return true;
+        case JNP:
+            return true;
+        case JNZ:
+            return true;
+        case JP:
+            return true;
+        case JZ:
+            return true;
+        default:
+            return false;
+    }
 }
 bool containsLabel(SymbolTable alias_table, const char *label) {
     if(stable_find(alias_table, label))

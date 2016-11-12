@@ -45,17 +45,17 @@ int main(int argc, char const *argv[]) {
     int lineCount = 0;
     //TODO: setar os valores corretos em ir.data
     ir = stable_insert(st, "rA");
-    ir.data = operand_create_register(255)
+    ir.data->opd = operand_create_register(255);
     ir = stable_insert(st, "rR");
-    ir.data = operand_create_register(254)
+    ir.data->opd = operand_create_register(254);
     ir = stable_insert(st, "rY");
-    ir.data = operand_create_register(252)
+    ir.data->opd = operand_create_register(252);
     ir = stable_insert(st, "rX");
-    ir.data = operand_create_register(252)
+    ir.data->opd = operand_create_register(252);
     ir = stable_insert(st, "rZ");
-    ir.data = operand_create_register(250)
+    ir.data->opd = operand_create_register(250);
     ir = stable_insert(st, "rSP");
-    ir.data = operand_create_register(253)
+    ir.data->opd = operand_create_register(253);
 
 
     while (read_line(input, B)) {
