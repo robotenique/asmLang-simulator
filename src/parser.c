@@ -95,7 +95,7 @@ Operand* isRegister(char* oprd, SymbolTable st);
  *
  *****************************************************************************/
 
-int posErr(char* source, char* raw, int pos) {
+int posErr(const char* source, char* raw, int pos) {
   int i = -1;
   int count = 0;
   do {
@@ -177,12 +177,8 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         }
         else {
             errC.pos = BS.x;
-<<<<<<< HEAD
             set_error_msg("Duplicate label assignment!");
             posErr(s, BS.B->data, BS.x);
-=======
-            set_error_msg("Double label assignment!");
->>>>>>> 54f247b23e7883ec2527a0ac4ca4d71a2e1c5854
             return 0;
         }
     }
@@ -649,7 +645,7 @@ InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     }
     else{
         if(strcmp(tmp, "NOP") == 0 && BS->B->data[BS->y] != 0){
-            set_error_msg("Unexpected Operand after NOP!");
+            set_error_msg("Unexpected char after NOP!");
             free(tmp);
             return NULL;
         }
