@@ -29,6 +29,7 @@ typedef Instruction **pointer;
 int main(int argc, char const *argv[]) {
     Buffer *B = buffer_create();
     SymbolTable st = stable_create();
+    InsertionResult ir;
     Instruction ** instList;
     instList = emalloc(sizeof(Instruction*));
     int parseResult;
@@ -42,6 +43,21 @@ int main(int argc, char const *argv[]) {
     if (input == NULL)
        die("Error opening file, aborting...");
     int lineCount = 0;
+    //TODO: setar os valores corretos em ir.data
+    ir = stable_insert(st, "rA");
+    ir.data = operand_create_register(255)
+    ir = stable_insert(st, "rR");
+    ir.data = operand_create_register(254)
+    ir = stable_insert(st, "rY");
+    ir.data = operand_create_register(252)
+    ir = stable_insert(st, "rX");
+    ir.data = operand_create_register(252)
+    ir = stable_insert(st, "rZ");
+    ir.data = operand_create_register(250)
+    ir = stable_insert(st, "rSP");
+    ir.data = operand_create_register(253)
+
+
     while (read_line(input, B)) {
         buffer_push_back(B,0);
 
