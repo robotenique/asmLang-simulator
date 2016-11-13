@@ -115,13 +115,13 @@ void parseEntry(Line *head) {
         if(parseResult == 0) {
             char *tmp = removeNL(p->line);
             printf("\nline %d: \"%s\"\n",p->number, tmp);
-            print_error_msg(NULL);
             stable_destroy(st);
             char* errorPointer = malloc(strlen(p->line) + 10);
             unsigned int i = 0;
             for(char* po = p->line; (p->line)[i] && po != errStr; po = &(p->line)[i], i++) errorPointer[i] = ' ';
             errorPointer[i] = '^', errorPointer[i+1] = 0;
             printf("%s\n %s\n", p->line, errorPointer);
+            print_error_msg(NULL);
             return;
         }
         instHEAD->lineno = p->number;
@@ -141,13 +141,13 @@ void parseEntry(Line *head) {
             printAllList(instHEAD, head, ant->number);
             char *tmp = removeNL(p->line);
             printf("\nline %d: \"%s\"\n",p->number, tmp);
-            print_error_msg(NULL);
             stable_destroy(st);
             char* errorPointer = malloc(strlen(p->line) + 10);
             unsigned int i = 0;
             for(char* po = p->line; (p->line)[i] && po != errStr; po = (p->line) + i, i++) errorPointer[i] = ' ';
             errorPointer[i] = '^', errorPointer[i+1] = 0;
             printf("%s\n %s\n", p->line, errorPointer);
+            print_error_msg(NULL);
             return;
         }
         else if(parseResult == 1) {
@@ -332,12 +332,16 @@ int checkLabels(SymbolTable st, Instruction *head) {
         if(isConditional(p->op)) {
             int nargs;
             for (nargs = 0; nargs < 3 && p->op->opd_types[nargs] != OP_NONE; ++nargs);
-            if(nargs == 1 && stable_find(st,p->opds[0]->value.label) == NULL){
+            if(nargs == 1 &&
+                p->opds[0]->type == LABEL &&
+                stable_find(st,p->opds[0]->value.label) == NULL){
                 set_error_msg("Error with %s operator: label \"%s\" never defined!",
                 p->op->name, p->opds[0]->value.label);
                 return p->lineno;
             }
-            else if(nargs == 2 && stable_find(st,p->opds[1]->value.label) == NULL) {
+            else if(nargs == 2 &&
+                p->opds[1]->type == LABEL &&
+                stable_find(st,p->opds[1]->value.label) == NULL) {
                 set_error_msg("Error with %s operator: label \"%s\" never defined!",
                 p->op->name, p->opds[1]->value.label);
                 return p->lineno;
