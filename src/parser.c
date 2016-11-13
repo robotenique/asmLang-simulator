@@ -121,7 +121,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
      * the position (in the string) where the error was found.
      */
     if (iAux == NULL) {
-        errC.pos = posErr(s, BS.B->data, BS.x);
+        errC.pos = posErr(s, BS.B->data, errC.pos);
         *errptr = &(s[errC.pos]);
         return 0;
     }
@@ -153,7 +153,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         BS.x = ++BS.y;
         iAux = getLabelOrOperator(&BS, &errC);
         if (iAux == NULL) {
-          errC.pos = posErr(s, BS.B->data, BS.x);
+          errC.pos = posErr(s, BS.B->data, errC.pos);
             *errptr = &(s[errC.pos]);
             return 0;
         }
@@ -791,7 +791,7 @@ InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     char *tmp = estrdup((BS->B->data) + BS->x);
     tmp[BS->y - BS->x] = 0;
     if(strcmp(tmp, "NOP") != 0 && BS->B->data[BS->y] != ' ') {
-        errC->pos = BS->y;
+        errC->pos = (BS->y) - 1;
         if(BS->B->data[BS->y] == 0)
             set_error_msg("Unexpected end of line!");
         else
@@ -879,7 +879,7 @@ int posErr(const char* source, char* raw, int pos) {
  *
  * @args    source: A string
  *          raw: the reduced form of the source string
- *          opnumber: the position of the operand (i.e., 1, 2, or 3, indicating 
+ *          opnumber: the position of the operand (i.e., 1, 2, or 3, indicating
  *          first, second, or third, respectively)
  *
  * @return
