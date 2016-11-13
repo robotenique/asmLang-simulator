@@ -24,7 +24,7 @@
 #define LIMBYTE1 ((1UL <<  8) - 1)
 #define LIMBYTE2 ((1UL << 16) - 1)
 #define LIMBYTE3 ((1UL << 24) - 1)
-#define LIMTETRA ((1UL << 32) - 1)
+#define LIMTETRA ((1LL << 32) - 1)
 
 // Stores a buffer and two "positions"
 typedef struct BufferStorage {
@@ -872,10 +872,12 @@ int posErr(const char* source, char* raw, int pos) {
 /*
  * Function: posErrOperands
  * --------------------------------------------------------
- * Similar to the posErr, but returns the first char before the first comma
- * after the operand.
+ * Similar to the posErr, but returns the first char of operand at position opnumber.
  *
- * @args    :
+ * @args    source: A string
+ *          raw: the reduced form of the source string
+ *          opnumber: the position of the operand (i.e., 1, 2, or 3, indicating 
+ *          first, second, or third, respectively)
  *
  * @return
  */
@@ -888,5 +890,5 @@ int posErrOperands(char* source, int pos, int opNumber) {
 
   int sz = strlen(source);
 
-  return i > sz-1 ? sz - 1 : i;
+  return i > sz-1 ? sz-1 : i;
 }
