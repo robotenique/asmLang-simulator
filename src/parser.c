@@ -121,6 +121,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
      * the position (in the string) where the error was found.
      */
     if (iAux == NULL) {
+        errC.pos = posErr(s, BS.B->data, BS.x);
         *errptr = &(s[errC.pos]);
         return 0;
     }
@@ -152,6 +153,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         BS.x = ++BS.y;
         iAux = getLabelOrOperator(&BS, &errC);
         if (iAux == NULL) {
+          errC.pos = posErr(s, BS.B->data, BS.x);
             *errptr = &(s[errC.pos]);
             return 0;
         }
@@ -777,6 +779,7 @@ bool containsLabel(SymbolTable alias_table, const char *label) {
 InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     int i;
     char first = BS->B->data[BS->x];
+    printf("RECEBENDO char = %c\n",BS->B->data[BS->x]);
     if(!(isalpha(first)) && !(first == '_')) {
         errC->pos = BS->x;
         set_error_msg("Invalid char for label / operator!");
@@ -799,6 +802,7 @@ InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     }
     else{
         if(strcmp(tmp, "NOP") == 0 && BS->B->data[BS->y] != 0){
+           errC->pos = BS->y;
             set_error_msg("Unexpected char after NOP!");
             free(tmp);
             return NULL;
