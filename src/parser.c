@@ -779,7 +779,6 @@ bool containsLabel(SymbolTable alias_table, const char *label) {
 InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     int i;
     char first = BS->B->data[BS->x];
-    printf("RECEBENDO char = %c\n",BS->B->data[BS->x]);
     if(!(isalpha(first)) && !(first == '_')) {
         errC->pos = BS->x;
         set_error_msg("Invalid char for label / operator!");
