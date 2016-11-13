@@ -117,8 +117,9 @@ void parseEntry(Line *head) {
             printf("\nline %d: \"%s\"\n",p->number, tmp);
             print_error_msg(NULL);
             stable_destroy(st);
-            int i;
-            for(char* po = &(p->line), i = 0; (p->line)[i] && po != *errStr; po = &(p->line)[i], i++) errorPointer[i] = ' ';
+            char* errorPointer = malloc(strlen(p->line) + 10);
+            unsigned int i = 0;
+            for(char* po = p->line; (p->line)[i] && po != errStr; po = &(p->line)[i], i++) errorPointer[i] = ' ';
             errorPointer[i] = '^', errorPointer[i+1] = 0;
             printf("%s\n %s\n", p->line, errorPointer);
             return;
@@ -143,8 +144,8 @@ void parseEntry(Line *head) {
             print_error_msg(NULL);
             stable_destroy(st);
             char* errorPointer = malloc(strlen(p->line) + 10);
-            int i;
-            for(char* po = &(p->line), i = 0; (p->line)[i] && po != *errStr; po = &(p->line)[i], i++) errorPointer[i] = ' ';
+            unsigned int i = 0;
+            for(char* po = p->line; (p->line)[i] && po != errStr; po = (p->line) + i, i++) errorPointer[i] = ' ';
             errorPointer[i] = '^', errorPointer[i+1] = 0;
             printf("%s\n %s\n", p->line, errorPointer);
             return;
