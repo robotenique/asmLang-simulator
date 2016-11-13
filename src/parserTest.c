@@ -30,6 +30,7 @@ bool isEmpty(char *str);
 int checkLabels(SymbolTable st, Instruction *head);
 void insert(char *ss);
 
+
 /*
  * Function: main
  * --------------------------------------------------------
@@ -66,8 +67,8 @@ int main(int argc, char const *argv[]) {
         }
         while (first->next != NULL) {
             lineCount++;
-            if(!isEmpty(first->next->s))
-                addLine(&head, first->next->s, lineCount);
+            if(!isEmpty(trimComment(first->next->s)))
+                addLine(&head, trimComment(first->next->s), lineCount);
             first = first->next;
         }
         buffer_reset(B);
@@ -329,7 +330,7 @@ int checkLabels(SymbolTable st, Instruction *head) {
     Instruction *p;
     EntryData *dt;
     for(p = head; p; p = p->next) {
-        if(isConditional(p->op)) {
+        if(isConditional(p->op) && p->op->opcode == EXTERN) {
             int nargs;
             for (nargs = 0; nargs < 3 && p->op->opd_types[nargs] != OP_NONE; ++nargs);
             if(nargs == 1 && p->opds[0]->type == LABEL){
@@ -337,14 +338,6 @@ int checkLabels(SymbolTable st, Instruction *head) {
                 if(dt == NULL || dt->opd->type != LABEL) {
                     set_error_msg("Error with %s operator: label \"%s\" never defined!",
                     p->op->name, p->opds[0]->value.label);
-                    return p->lineno;
-                }
-            }
-            else if(nargs == 2 && p->opds[1]->type == LABEL) {
-                dt = stable_find(st,p->opds[1]->value.label);
-                if(dt == NULL || dt->opd->type != LABEL) {
-                    set_error_msg("Error with %s operator: label \"%s\" never defined!",
-                    p->op->name, p->opds[1]->value.label);
                     return p->lineno;
                 }
             }

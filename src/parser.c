@@ -7,11 +7,10 @@
  * Parser implementation
  */
 
-#include <ctype.h>
-#include <stdlib.h>
-#include <string.h>
-#include <mcheck.h>
-#include <errno.h>
+#include <ctype.h> //isspace, isalpha, etc
+#include <stdlib.h> //malloc, strtoll
+#include <string.h> //strcmp, strdup
+#include <errno.h> //Check error
 #include "../include/buffer.h"
 #include "../include/error.h"
 #include "../include/asmtypes.h"
@@ -21,20 +20,20 @@
 #include "../include/parser.h"
 #include "../include/defaultops.h"
 
-#define LIMBYTE1 ((1UL << 8) - 1)
+/* Limits of the byte types */
+#define LIMBYTE1 ((1UL <<  8) - 1)
 #define LIMBYTE2 ((1UL << 16) - 1)
 #define LIMBYTE3 ((1UL << 24) - 1)
 #define LIMTETRA ((1UL << 32) - 1)
 
-
-
+// Stores a buffer and two "positions"
 typedef struct BufferStorage {
     Buffer *B;
     int x, y;
 } BufferStorage;
 
+// Container to store the position of the error and a string
 typedef struct errContainer {
-    bool isErr;
     int pos;
     char *or_String;
 } errContainer;
@@ -49,6 +48,7 @@ typedef struct InstrAux {
     bool isLabel;
 } InstrAux;
 
+// Stores the information read yet
 typedef struct InstrConf {
     bool label;
     bool operator;
@@ -57,70 +57,46 @@ typedef struct InstrConf {
     const Operator *opr;
 }InstrConf;
 
-char *trimSpc(char *s);
-char *cutSpc(char *text);
-char *trimComment(char *text);
+/*---------------------------Function Prototypes -----------------------*/
+
 bool isEmptyLine (BufferStorage BS);
-bool isValidChar(char c);
 bool containsLabel(SymbolTable alias_table, const char *label);
-bool isOprInvalid(const Operator *op, errContainer *errC);
+bool isOprInvalid(const Operator *op);
 InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC);
+/* Error processing functions */
+int posErr(const char* source, char* raw, int pos);
+int posErrOperands(char* source, int pos, int opNumber);
+/* Function to process every operand */
 Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st);
 Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st);
 Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st);
+/* Operand parsing functions */
 Operand* isString(char* oprd);
 Operand* isLabel(char* oprd, SymbolTable st);
 Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE);
 Operand* isRegister(char* oprd, SymbolTable st);
 
 
-/******************************************************************************
- * parser.c
- * First, we remove every extra space from the string.
- * Then, we trim the spaces from the begining and ending of the string.
- * Now the string is in the 'raw' form, i.e., when there is a space, it's
- * only one, and there's no space in the end or the begining of the string;
+/*
+ * Function: parse
+ * --------------------------------------------------------
+ * Parses a line of instruction, and creates a Instruction instance with
+ * the information of the line parsed. The function creates a default string
+ * from the given line, get the label (if it has one), get the operator
+ * and then get all the operators, while checking error in each step.
+ * If any error is found, the parse function stops from parsing the rest
+ * of the line.
  *
- * We then get a label or an operator.
- *    -> If we found a label, then we try to get another operator;
- *    -> If we found an operator, we evaluate if it's valid :
- *          - If the operator is 'IS', it's not valid, because 'IS' needs
- *            a label;
+ * @args    s: The string with the original instruction.
+ *          alias_table: Symbol table with the registered operands
+ *          instr: Linked list with the instructions
+ *          errptr: A pointer to a char in the string S
  *
- *
- *
- *****************************************************************************/
-
-int posErr(const char* source, char* raw, int pos) {
-  int i = -1;
-  int count = 0;
-  do {
-    if (!isspace(raw[++i])) count++;
-  } while (i != pos);
-
-  i = -1;
-  do {
-    if (!isspace(source[++i])) count--;
-  } while (count);
-
-  return i;
-}
-
-int posErrOperands(char* source, int pos, int opNumber) {
-  int commas = 0;
-  int i = pos;
-
-  while (commas != opNumber-1) if (source[i++] == ',') commas++;
-  while (isspace(source[i])) i++;
-
-  int sz = strlen(source);
-
-  return i > sz-1 ? sz - 1 : i;
-}
-
+ * @return 0 on error, nonzero on sucess
+ */
 int parse(const char *s, SymbolTable alias_table, Instruction **instr,
           const char **errptr) {
     errno = 0;
@@ -163,8 +139,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     }
     else {
         opr = (iAux->val).opr;
-        if(isOprInvalid(opr, &errC)) {
-            //TODO: SETAR o errptr em todos os "return 0"
+        if(isOprInvalid(opr)) {
             errC.pos = posErr(s, BS.B->data, BS.x);
             *errptr = &(s[errC.pos]);
             return 0;
@@ -213,6 +188,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
 
     errC.or_String = malloc(strlen(s) + 10);
     strcpy(errC.or_String, s);
+    // Check the operands
     switch (nargs) {
         case 3:
             vOps = getOperands_3(&BS, &errC, iconf.opr, alias_table);
@@ -265,6 +241,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
             }
         break;
     }
+    // Creates the instruction
     Instruction * newInst;
     newInst = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
     if(*instr != NULL)
@@ -273,6 +250,21 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     return 1;
 }
 
+/*
+ * Function: getOperands_1
+ * --------------------------------------------------------
+ * Get the operand for the instructions which requires 1 operand only.
+ * The operand is parsed individually in the correct function.
+ *
+ * @args    bs: A buffer storage with the line in the buffer
+ *          errC: Error container to set the error position
+ *          op: The operator
+ *          st: the SymbolTable with the operands already stored
+ *
+ * @return An array with the three operands, on success. In this case, the
+ *          two last position of this array are "NULL". If there's an error
+ &          returns NULL.
+ */
 Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st){
   int i = 0;
@@ -295,15 +287,15 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
   oprds[0] = trimSpc(oprds[0]);
   int spaces = 0;
   for (int j = 0; oprds[0][j]; spaces += ((oprds[0][j++] == ' ') ? 1 : 0));
-  if (spaces) {
-    set_error_msg("Invalid operand found!\n");
+  if (spaces && op->opcode != STR) {
+    set_error_msg("Invalid operand found for operator %s!\n",op->name);
     errC -> pos = posErrOperands(errC -> or_String, bs -> x, 1);
-
     return NULL;
   }
 
   Operand** ops = emalloc(3*sizeof(Operand*));
 
+  // Process the operand
   switch (op -> opd_types[0]) {
     case LABEL:
       if ((ops[0] = isLabel(oprds[0], st)) == NULL) {
@@ -372,19 +364,35 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
     default:
       break;
   }
-
   ops[1] = ops[2] = NULL;
   return ops;
 }
 
+/*
+ * Function: getOperands_2
+ * --------------------------------------------------------
+ * Get the operands for the instruction which requires 2 operands. Parse each
+ * operand individually, and return them on sucess.
+ *
+ * @args    bs: A buffer storage with the line in the buffer
+ *          errC: Error container to set the error position
+ *          op: The operator
+ *          st: the SymbolTable with the operands already stored
+ *
+ * @return An array with the three operands, on success. In this case, the
+ *          last position of this array are "NULL". If there's an error
+ *          returns NULL.
+ */
 Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st){
   int i = 0;
   int commas = 0;
+  // Count the commans in the operands
   for (i = bs->x; i < bs->B->i-1; commas += (bs->B->data[i++] == ',') ? 1 : 0);
   char* oprds[3] = {NULL, NULL, NULL};
   char *tmp;
   tmp = strtok(estrdup(bs->B->data + bs->x),",");
+  // Separate the operands by the ","
   for(int i = 0; i < 2 && tmp != NULL; i++) {
       oprds[i] = estrdup(tmp);
       tmp = strtok(NULL, ",");
@@ -407,7 +415,7 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
     int spaces = 0;
     for (int j = 0; oprds[i][j]; spaces += ((oprds[i][j++] == ' ') ? 1 : 0));
     if (spaces) {
-      set_error_msg("Invalid operand found!\n");
+        set_error_msg("Invalid operand found for operator %s!\n",op->name);
       errC -> pos = posErrOperands(errC -> or_String, bs -> x, i+1);
       return NULL;
     }
@@ -449,10 +457,25 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
     return ops;
 }
 
+/*
+ * Function: getOperands_3
+ * --------------------------------------------------------
+ * Get the operands for the instruction which requres all 3 operands. Parse
+ * each operand individually, and return them on sucess.
+ *
+ * @args    bs: A buffer storage with the line in the buffer
+ *          errC: Error container to set the error position
+ *          op: The operator
+ *          st: the SymbolTable with the operands already stored
+ *
+ * @return An array with the three operands, on success. If there's an error
+ *          returns NULL.
+ */
 Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st){
   int i = 0;
   int commas = 0;
+  // Count the commas of the operands string
   for (i = bs->x; i < bs->B->i-1; commas += (bs->B->data[i++] == ',') ? 1 : 0);
   char* oprds[3] = {NULL, NULL, NULL};
   char *tmp;
@@ -481,7 +504,7 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     int spaces = 0;
     for (int j = 0; oprds[i][j]; spaces += ((oprds[i][j++] == ' ') ? 1 : 0));
     if (spaces) {
-      set_error_msg("Invalid operand found!\n");
+      set_error_msg("Invalid operand found for operator %s!\n",op->name);
       errC -> pos = posErrOperands(errC -> or_String, bs -> x, i+1);
       free(tmp);
       return NULL;
@@ -490,6 +513,7 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
 
   Operand** ops = emalloc(3*sizeof(Operand*));
 
+  // Parse every operand
   for (int i = 0; i < 3; i++)
     switch (op -> opd_types[i]) {
       case REGISTER:
@@ -520,6 +544,16 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     return ops;
 }
 
+/*
+ * Function: isString
+ * --------------------------------------------------------
+ * Check if a given operand string is a valid operand for the STR operator.
+ * It checks the " in the expression to see if it's valid.
+ *
+ * @args    oprd : A string of the operand
+ *
+ * @return A operand instance on sucess, NULL on error.
+ */
 Operand* isString(char* oprd){
   int i;
   int count = 0;
@@ -539,6 +573,17 @@ Operand* isString(char* oprd){
   return NULL;
 }
 
+/*
+ * Function: isLabel
+ * --------------------------------------------------------
+ * Check if a given operand string is a label, just checking if the
+ * string is in the SymbolTable, and if it is, checking if the type is LABEL.
+ *
+ * @args    oprd: The string
+ *          st: The SymbolTable with the operands
+ *
+ * @return  An instance of the operand on sucess, NULL on error
+ */
 Operand* isLabel(char* oprd, SymbolTable st){
   EntryData* ed = stable_find(st, oprd);
 
@@ -549,6 +594,22 @@ Operand* isLabel(char* oprd, SymbolTable st){
   return NULL;
 }
 
+/*
+ * Function: isByte
+ * --------------------------------------------------------
+ * Check if a number is a valid byte type. The size of the byte is specified
+ * by the parameter, then the function checks if it's a plain number checking
+ * the limits, if not, checks if it's an hexadecimal number checking the
+ * limits, if not, check if the string is in the symbol table, then checks if
+ * the type is NUMBER_TYPE, and finally checks the limits.
+ *
+ * @args    oprd: A string with the operand
+ *          st: A SymbolTable with the operands already stored
+ *          neg: A flag to allow negative numbers. Set to 1 to allow, 0 to deny.
+ *          LIMBYTE: the limits allowed for a number.
+ *
+ * @return An instance of the operand on sucess, NULL on error.
+ */
 Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE){
   int byteNum;
   switch (LIMBYTE) {
@@ -568,6 +629,7 @@ Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE){
         byteNum = -1;
     break;
   }
+  // If it's just a 0 we need to make an exception due to strtoll behavior
   if (strcmp(oprd, "0") == 0) {
     return operand_create_number(0);
   }
@@ -579,6 +641,7 @@ Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE){
   }
     if (oprd[0] == '#') {
         if (strlen(oprd) >= 2) {
+            //Calculate the hexadecimal number
             n = strtoll(oprd + 1, &check, 16);
             if (errno == ERANGE) {
                 set_error_msg("Number not in range (overflow or underflow)!\n");
@@ -610,6 +673,19 @@ Operand* isByte(char* oprd, SymbolTable st, int neg, octa LIMBYTE){
   return NULL;
 }
 
+/*
+ * Function: isRegister
+ * --------------------------------------------------------
+ * Check if a string is a valid Register. If the string starts with '$',
+ * it checks to see if the number / string after it is a number in the correct
+ * range for a register. If it's a label, search it in the SymbolTable to check
+ * if it was previously defined.
+ *
+ * @args    oprd: A string of the operand
+ *          st: A SymbolTable with the operands already stored
+ *
+ * @return An instance of the operand on sucess, NULL on error.
+ */
 Operand* isRegister(char* oprd, SymbolTable st){
   if (strcmp(oprd, "$") == 0) {
       set_error_msg("Invalid operand, expected Register!\n");
@@ -649,18 +725,55 @@ Operand* isRegister(char* oprd, SymbolTable st){
   return NULL;
 }
 
-bool isOprInvalid(const Operator *op, errContainer *errC) {
+/*
+ * Function: isOprInvalid
+ * --------------------------------------------------------
+ * Check if the operator is the "IS", on sucess sets the error message.
+ * This is necessary because the operator IS the only operator that expects
+ * a label.
+ *
+ * @args    op: The operator
+
+ *
+ * @return true if it's invalid, false if it's not
+ */
+bool isOprInvalid(const Operator *op) {
     if(op->opcode == IS) {
         set_error_msg("Operator \"IS\" expects a label!");
         return true;
     }
     return false;
 }
+
+/*
+ * Function: containsLabel
+ * --------------------------------------------------------
+ * Sematically pretty way of checking if a label is in the SymbolTable.
+ *
+ * @args    alias_table: The SymbolTable with the operands
+ *          label: The label to search in the SymbolTable
+ *
+ * @return true if it's on the symbol table, false if it's not
+ */
 bool containsLabel(SymbolTable alias_table, const char *label) {
     if(stable_find(alias_table, label))
         return true;
     return false;
 }
+
+/*
+ * Function: getLabelOrOperator
+ * --------------------------------------------------------
+ * Get a label or an operator. It checks to see if the label is valid, then
+ * checks if the label is an operator. If it's an operator, returns the
+ * operator, if it's a label, returns the label.
+ *
+ * @args    BS : A buffer storage with the string of the instruction
+ *          errC: The error Container
+ *
+ * @return  A InstrAux struct with the operator or the label, and a bool
+            set to the type returned. If there's an error, returns NULL.
+ */
 InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     int i;
     char first = BS->B->data[BS->x];
@@ -676,7 +789,6 @@ InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     char *tmp = estrdup((BS->B->data) + BS->x);
     tmp[BS->y - BS->x] = 0;
     if(strcmp(tmp, "NOP") != 0 && BS->B->data[BS->y] != ' ') {
-        errC->isErr = true;
         errC->pos = BS->y;
         if(BS->B->data[BS->y] == 0)
             set_error_msg("Unexpected end of line!");
@@ -713,9 +825,15 @@ InstrAux* getLabelOrOperator(BufferStorage *BS, errContainer *errC){
     return ret;
 }
 
-bool isValidChar(char c)  {
-    return c && (isalnum(c) || c == '_');
-}
+/*
+ * Function: isEmptyLine
+ * --------------------------------------------------------
+ * Check if a line is empty
+ *
+ * @args    BS: The buffer storage with the string
+ *
+* @return true if it's empty, false if it's not
+ */
 bool isEmptyLine(BufferStorage BS) {
     int i;
     if(BS.B->data[0] == 0)
@@ -723,45 +841,52 @@ bool isEmptyLine(BufferStorage BS) {
     for(i = 0; i < BS.B->i &&    isspace(BS.B->data[i]); i++);
     return i == BS.B->i;
 }
-char *cutSpc(char *text) {
-   int length, c, d;
-   char *start;
-   c = d = 0;
-   for(int i = 0; text[i]; text[i] = isspace(text[i]) ? ' ':text[i], i++);
-   length = strlen(text);
-   start = (char*)malloc(length+1);
-   if (start == NULL)
-      die("Error in memory allocation!");
 
-    while (*(text+c) != '\0') {
-      if (*(text+c) == ' ') {
-         int temp = c + 1;
-         if (*(text+temp) != '\0') {
-            while (*(text+temp) == ' ' && *(text+temp) != '\0') {
-               if (*(text+temp) == ' ') {
-                  c++;
-               }
-               temp++;
-            }
-         }
-      }
-      *(start+d) = *(text+c);
-      c++;
-      d++;
-   }
-   *(start+d)= '\0';
+/*
+ * Function: posErr
+ * --------------------------------------------------------
+ * Given a string "source" and another "raw", the function returns the position
+ * of the char in raw[pos] but in the string source. It's used to set the
+ * error pointer (*errPtr) in the parse function.
+ *
+ * @args    source: A string
+ *          raw: the reduced form of the source string
+ *
+ * @return  the position of the char raw[pos] in the string 'source'
+ */
+int posErr(const char* source, char* raw, int pos) {
+  int i = -1;
+  int count = 0;
+  do {
+    if (!isspace(raw[++i])) count++;
+  } while (i != pos);
 
-   return trimSpc(trimComment(start));
+  i = -1;
+  do {
+    if (!isspace(source[++i])) count--;
+  } while (count);
+
+  return i;
 }
-char *trimSpc(char *c) {
-    char * e = c + strlen(c) - 1;
-    while(*c && isspace(*c)) c++;
-    while(e > c && isspace(*e)) *e-- = '\0';
-    return c;
-}
-char *trimComment(char *text) {
-    int i;
-    for(i = 0; text[i] && text[i] != '*'; i++);
-    if(text[i] == '*') text[i] = 0;
-    return estrdup(text);
+
+/*
+ * Function: posErrOperands
+ * --------------------------------------------------------
+ * Similar to the posErr, but returns the first char before the first comma
+ * after the operand.
+ *
+ * @args    :
+ *
+ * @return
+ */
+int posErrOperands(char* source, int pos, int opNumber) {
+  int commas = 0;
+  int i = pos;
+
+  while (commas != opNumber-1) if (source[i++] == ',') commas++;
+  while (isspace(source[i])) i++;
+
+  int sz = strlen(source);
+
+  return i > sz-1 ? sz - 1 : i;
 }

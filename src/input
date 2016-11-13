@@ -1,1 +1,4 @@
-readnum GETA n      ,2
+EXTERN       main
+main XOR $0,$1,$1
+JMP BOP
+INT 0
