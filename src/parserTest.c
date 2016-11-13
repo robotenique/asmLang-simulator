@@ -4,12 +4,11 @@
  *
  * MAC0216
  *
- * Parser test
+ * Parser test implementation
  */
 #include <ctype.h>
 #include <stdlib.h>
 #include <string.h>
-#include <mcheck.h>
 #include "../include/buffer.h"
 #include "../include/error.h"
 #include "../include/asmtypes.h"
@@ -20,6 +19,7 @@
 #include "../include/stable.h"
 #include "../include/defaultops.h"
 
+// Functions prototype
 void printOperands(Operand **opds);
 char *removeNL(char *str);
 void addLine(Line **head, char *line, int number);
@@ -29,7 +29,18 @@ bool isEmpty(char *str);
 int checkLabels(SymbolTable st, Instruction *head);
 void insert(char *ss);
 
-
+/*
+ * Function: main
+ * --------------------------------------------------------
+ * Open the file read from the CLI, then creates a linked list
+ * with all the lines of the file, also separating lines that have ';' into
+ * different lines. Then, it sends the list to the function parseEntry.
+ *
+ * @args    argc: Number of args
+ *          argv: Array with the args
+ *
+ * @return default return
+ */
 int main(int argc, char const *argv[]) {
     Buffer *B = buffer_create();
     Line *head = NULL;
@@ -43,18 +54,16 @@ int main(int argc, char const *argv[]) {
     int lineCount = 0;
     while (read_line(input, B)) {
         buffer_push_back(B,0);
-
         end = emalloc(sizeof(string));
-        end -> s = NULL;
-        end -> next = NULL;
+        end->s = NULL;
+        end->next = NULL;
         first = end;
-
-        char *token = strtok (B -> data, ";");
+        char *token = strtok (B->data, ";");
         while (token != NULL) {
             insert(token);
             token = strtok (NULL, ";");
         }
-        while (first -> next != NULL) {
+        while (first->next != NULL) {
             lineCount++;
             if(!isEmpty(first->next->s))
                 addLine(&head, first->next->s, lineCount);
@@ -63,9 +72,20 @@ int main(int argc, char const *argv[]) {
         buffer_reset(B);
     }
     parseEntry(head);
+    buffer_destroy(B);
     return 0;
 }
 
+/*
+ * Function: parseEntry
+ * --------------------------------------------------------
+ * Parses the lines in the linked list, then print the Instr. as defined.
+ * If there's an error, prints only up to the error.
+ *
+ * @args    head: Pointer to the head of the line linked list
+ *
+ * @return
+ */
 void parseEntry(Line *head) {
     SymbolTable st = stable_create();
     InsertionResult ir;
@@ -75,6 +95,7 @@ void parseEntry(Line *head) {
     int parseResult;
     const char *errStr;
     Line *p, *ant;
+    // Insert the default labels into the symbol table
     ir = stable_insert(st, "rA");
     ir.data->opd = operand_create_register(255);
     ir = stable_insert(st, "rR");
@@ -93,17 +114,21 @@ void parseEntry(Line *head) {
         parseResult =  parse(p->line, st, &instHEAD, &errStr);
         if(parseResult == 0) {
             char *tmp = removeNL(p->line);
-            printf("\n=============FOUND ERROR=============\n");
-            printf("line %d: \"%s\"\n",p->number, tmp);
+            printf("\nline %d: \"%s\"\n",p->number, tmp);
             print_error_msg(NULL);
+            stable_destroy(st);
             return;
         }
         instHEAD->lineno = p->number;
         p = p->next;
     }
+    // The end has the same pointer as the head
     ptr = instHEAD;
     ant = p;
-    // The end has the same pointer as the head
+    /* Get the parse result of each list. If there's an immediate error,
+     * It stops the parsing and print the error, along with all the elements
+     * before the error.
+     */
     for(; p; ant = p, p = p->next) {
         end = NULL;
         parseResult =  parse(p->line, st, &end, &errStr);
@@ -112,6 +137,7 @@ void parseEntry(Line *head) {
             char *tmp = removeNL(p->line);
             printf("\nline %d: \"%s\"\n",p->number, tmp);
             print_error_msg(NULL);
+            stable_destroy(st);
             return;
         }
         else if(parseResult == 1) {
@@ -123,6 +149,10 @@ void parseEntry(Line *head) {
 
     // If there's no error, check if all the labels are in the SymbolTable!
     int lineError = checkLabels(st, instHEAD);
+    /* If there's a label which is not defined, print all the parsing
+     * before the error, then print the line of the error and
+     * the error message.
+     */
     if(lineError > 0) {
         printAllList(instHEAD, head, lineError - 1);
         for(p = head; p && p->number != lineError; p = p->next);
@@ -131,13 +161,27 @@ void parseEntry(Line *head) {
         print_error_msg(NULL);
     }
     else {
+        // If there's more than 1 line, print everything up until the line
         if(ant)
             printAllList(instHEAD, head, ant->number);
-        else
+        else //print the only line.
             printAllList(instHEAD, head, 10);
     }
+    stable_destroy(st);
 }
 
+/*
+ * Function: printAllList
+ * --------------------------------------------------------
+ * Print all Instructions in the linked list or until the line number is
+ * less than or equals "times".
+ *
+ * @args    head: Head of the linked list with the instructions
+ *          headL: Head of linked list with the lines (Strings)
+ *          times: Max number of line to print the list
+ *
+ * @return
+ */
 void printAllList(Instruction *head, Line *headL, int times) {
     Instruction *p;
     Line *q;
@@ -152,12 +196,23 @@ void printAllList(Instruction *head, Line *headL, int times) {
     }
 }
 
+/*
+ * Function: printOperands
+ * --------------------------------------------------------
+ * Print the operands with the right string and formatting.
+ *
+ * @args    opds: Array with the operands of a instruction
+ *
+ * @return
+ */
 void printOperands(Operand **opds) {
     printf("OPERANDS = ");
     int lim;
+    // Get the number of operands
     for(lim = 0;lim < 3 && opds[lim]; lim++);
     for(int i = 0; i < 3; i++) {
         char *tmp;
+        // Set the ending string for a pretty print
         if(i == lim - 1) tmp = estrdup(";");
         else tmp = estrdup(", ");
         if(opds[i] != NULL) {
@@ -183,6 +238,15 @@ void printOperands(Operand **opds) {
 
 }
 
+/*
+ * Function: removeNL
+ * --------------------------------------------------------
+ * Remove the first '\n' from the ending of the string, and return it.
+ *
+ * @args    str: A string
+ *
+ * @return A string without a newline at the ending.
+ */
 char *removeNL(char *str) {
     char *tmp = estrdup(str);
     for(int i = strlen(tmp); i > 0; i--)
@@ -193,11 +257,24 @@ char *removeNL(char *str) {
     return tmp;
 }
 
+/*
+ * Function: addLine
+ * --------------------------------------------------------
+ * Add a new line to the linked list, with the correct line number
+ *
+ * @args    head: The head of the linked list
+ *          line: The string of the line
+ *          number: The number of the line
+ *
+ * @return
+ */
 void  addLine(Line **head, char *line, int number) {
     Line *aux, *p, *new;
+    // Create a new Line
     new = emalloc(sizeof(Line));
     new->line = estrdup(line);
     new->number = number;
+    // Insert it into the ending of the linked list
     for(aux = NULL, p = *head; p; aux = p, p = p->next);
     if(aux == NULL)
         *head = new;
@@ -206,6 +283,15 @@ void  addLine(Line **head, char *line, int number) {
     new->next = NULL;
 }
 
+/*
+ * Function: isEmpty
+ * --------------------------------------------------------
+ * Check if a string is made of spaces only
+ *
+ * @args    str: A string
+ *
+ * @return true if the string has only spaces, false if not
+ */
 bool isEmpty(char *str) {
     int len = strlen(str);
     int i;
@@ -215,6 +301,21 @@ bool isEmpty(char *str) {
     return false;
 }
 
+/*
+ * Function: checkLabels
+ * --------------------------------------------------------
+ * Check if all the labels used in the conditional operators (JP, JMP, ...)
+ * and the EXTERN were defined in the scope of the program. This is necessary
+ * because the function "parse" only receives one line per call, so without
+ * this function it wouldn't be possible to check, for instance, if a label
+ * referenced by the EXTERN operator was defined.
+ *
+ * @args    st: The SymbolTable with all the labels
+ *          head: The head of the linked list with the instructions
+ *
+ * @return  -1 if there's no error. If found an error, return the number of the
+ *          line in which the error was found.
+ */
 int checkLabels(SymbolTable st, Instruction *head) {
     Instruction *p;
     for(p = head; p; p = p->next) {
@@ -236,6 +337,15 @@ int checkLabels(SymbolTable st, Instruction *head) {
     return -1;
 }
 
+/*
+ * Function: insert
+ * --------------------------------------------------------
+ * Simple function to insert a new string into the tokens linked list.
+ *
+ * @args    ss: A string
+ *
+ * @return
+ */
 void insert(char *ss) {
     string *new = malloc(sizeof(string));
     new -> s = estrdup(ss);
