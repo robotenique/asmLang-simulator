@@ -36,7 +36,7 @@ typedef struct BufferStorage {
 typedef struct errContainer {
     bool isErr;
     int pos;
-    char *errMsg;
+    char *or_String;
 } errContainer;
 
 typedef union {
@@ -108,6 +108,18 @@ int posErr(char* source, char* raw, int pos) {
   } while (count);
 
   return i;
+}
+
+int posErrOperands(char* source, int pos, int opNumber) {
+  int commas = 0;
+  int i = pos;
+
+  while (commas != opNumber-1) if (source[i++] == ',') commas++;
+  while (isspace(source[i])) i++;
+
+  int sz = strlen(source);
+
+  return i > sz-1 ? sz - 1 : i;
 }
 
 int parse(const char *s, SymbolTable alias_table, Instruction **instr,
@@ -195,6 +207,10 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     vOps = emalloc(sizeof(Operand *));
     for(int i = 0; i < 3; i++)
         vOps[i] = NULL;
+
+    errC -> or_String = malloc(strlen(s) + 10);
+    strcpy(or_String, s);
+
     switch (nargs) {
         case 3:
             vOps = getOperands_3(&BS, &errC, iconf.opr, alias_table);
@@ -263,6 +279,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
   if (commas != 0 || oprds[0] == NULL) {
     set_error_msg("Wrong number of operands!\n");
     errC -> pos = bs -> x;
+    posErrOperands(errC -> or_String, bs -> x, 1);
     return NULL; // wrong number of commas
   }
 
@@ -272,6 +289,8 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
   if (spaces) {
     set_error_msg("Invalid operand found!\n");
     errC -> pos = bs -> x;
+    posErrOperands(errC -> or_String, bs -> x, 1);
+
     return NULL;
   }
 
@@ -284,6 +303,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
             ops[0] = operand_create_label(oprds[0]);
         else {
             errC -> pos = bs -> x;
+            posErrOperands(errC -> or_String, bs -> x, 1);
             return NULL;
         }
       }
@@ -291,6 +311,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
     case BYTE3:
       if ((ops[0] = isByte(oprds[0], st, 0, LIMBYTE3))== NULL){
         errC -> pos = bs -> x;
+        posErrOperands(errC -> or_String, bs -> x, 1);
         return NULL;
       }
       break;
@@ -301,6 +322,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
                 ops[0] = operand_create_label(oprds[0]);
             else {
                 errC -> pos = bs -> x;
+                posErrOperands(errC -> or_String, bs -> x, 1);
                 return NULL;
             }
         }
@@ -309,18 +331,21 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
     case REGISTER:
       if ((ops[0] = isRegister(oprds[0], st)) == NULL) {
         errC -> pos = bs -> x;
+        posErrOperands(errC -> or_String, bs -> x, 1);
         return NULL;
       }
       break;
     case BYTE1:
       if ((ops[0] = isByte(oprds[0], st,  0, LIMBYTE1)) == NULL) {
         errC -> pos = bs -> x;
+        posErrOperands(errC -> or_String, bs -> x, 1);
         return NULL;
       }
       break;
     case STRING:
       if ((ops[0] = isString(oprds[0])) == NULL) {
         errC -> pos = bs -> x;
+        posErrOperands(errC -> or_String, bs -> x, 1);
         return NULL;
       }
       break;
@@ -328,6 +353,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
     case TETRABYTE | NEG_NUMBER:
       if ((ops[0] = isByte(oprds[0], st, 1, LIMTETRA)) == NULL) {
         errC -> pos = bs -> x;
+        posErrOperands(errC -> or_String, bs -> x, 1);
         return NULL;
       }
       break;
@@ -336,6 +362,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
         if ((ops[0] = isRegister(oprds[0], st)) == NULL){
             if ((ops[0] = isByte(oprds[0], st, 1, LIMTETRA)) == NULL) {
                 errC -> pos = bs -> x;
+                posErrOperands(errC -> or_String, bs -> x, 1);
                 return NULL;
             }
         }
@@ -366,6 +393,9 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
   if (commas != 1 || oprds[0] == NULL || oprds[1] == NULL) {
     set_error_msg("Wrong number of operands.\n");
     errC -> pos = bs -> x;
+    if (commas != 1) posErrOperands(errC -> or_String, strlen(errC -> or_String) - 1, 1);
+    else if (oprds[0] == NULL) posErrOperands(errC -> or_String, bs -> x, 1);
+    else if (oprds[1] == NULL) posErrOperands(errC -> or_String, bs -> x, 2);
     return NULL;
   }
 
@@ -376,6 +406,7 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
     if (spaces) {
       set_error_msg("Invalid operand found!\n");
       errC -> pos = bs -> x;
+      posErrOperands(errC -> or_String, bs -> x, i+1);
       return NULL;
     }
   }
@@ -388,6 +419,7 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
         ops[i] = isRegister(oprds[i], st);
         if (ops[i] == NULL) {
           errC -> pos = bs -> x;
+          posErrOperands(errC -> or_String, bs -> x, i+1);
           return NULL;
         }
         break;
@@ -398,6 +430,7 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
                         ops[i] = operand_create_label(oprds[i]);
                     else {
                         errC -> pos = bs -> x;
+                        posErrOperands(errC -> or_String, bs -> x, i+1);
                         return NULL;
                     }
                 }
@@ -406,6 +439,7 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
       case BYTE2:
             if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE2)) == NULL) {
                 errC -> pos = bs -> x;
+                posErrOperands(errC -> or_String, bs -> x, i+1);
                 return NULL;
             }
             break;
@@ -432,6 +466,10 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
   if (commas != 2 || oprds[0] == NULL || oprds[1] == NULL || oprds[2] == NULL) {
     set_error_msg("Wrong number of operands!\n");
     errC -> pos = bs -> x;
+    if (commas != 2) posErrOperands(errC -> or_String, strlen(errC -> or_String) - 1, 1);
+    else if (oprds[0] == NULL) posErrOperands(errC -> or_String, bs -> x, 1);
+    else if (oprds[1] == NULL) posErrOperands(errC -> or_String, bs -> x, 2);
+    else if (oprds[2] == NULL) posErrOperands(errC -> or_String, bs -> x, 3);
     free(tmp);
     return NULL;
   }
@@ -442,6 +480,7 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     if (spaces) {
       set_error_msg("Invalid operand found!\n");
       errC -> pos = bs -> x;
+      posErrOperands(errC -> or_String, bs -> x, i+1);
       free(tmp);
       return NULL;
     }
@@ -455,12 +494,14 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
         ops[i] = isRegister(oprds[i], st);
         if (ops[i] == NULL) {
           errC -> pos = bs -> x;
+          posErrOperands(errC -> or_String, bs -> x, i+1);
           return NULL;
         }
         break;
       case BYTE1:
         if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE1)) == NULL) {
           errC -> pos = bs -> x;
+          posErrOperands(errC -> or_String, bs -> x, i+1);
           return NULL;
         }
         break;
@@ -468,6 +509,7 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
         if ((ops[i] = isRegister(oprds[i], st)) == NULL) {
           if ((ops[i] = isByte(oprds[i], st, 0, LIMBYTE1)) == NULL) {
             errC -> pos = bs -> x;
+            posErrOperands(errC -> or_String, bs -> x, i+1);
             return NULL;
           }
         }
