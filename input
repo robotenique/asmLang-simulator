@@ -1,3 +1,4 @@
+EXTERNum main
 A IS $10
 B IS $20
-DIV A,B,s
+Bop JMP Bop
