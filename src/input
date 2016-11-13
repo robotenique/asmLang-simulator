@@ -1,4 +1,0 @@
-EXTERN       main
-main XOR $0,$1,$1
-JMP BOP
-INT 0
