@@ -47,10 +47,9 @@ int main(int argc, char const *argv[]) {
     Buffer *B = buffer_create();
     Line *head = NULL;
     set_prog_name("parser");
-    //if (argc != 2)
-    //    die("Wrong number of arguments, aborting...");
-    FILE* input = fopen("input", "r");
-    //FILE* input = fopen(argv[1], "r");
+    if (argc != 2)
+        die("Wrong number of arguments, aborting...");
+    FILE* input = fopen(argv[1], "r");
     if (input == NULL)
        die("Error opening file, aborting...");
     int lineCount = 0;
@@ -119,7 +118,7 @@ void parseEntry(Line *head) {
             int iniLen = strlen(estrdup("\nline : "));
             for(int n = p->number; n; n/=10, ++iniLen);
             octa dist =abs((octa)(p->line - errStr));
-            printf("\nline %d: %s\n",p->number,p->line);
+            printf("\nline %d: %s",p->number,p->line);
             for(int k = 0; k < dist + iniLen - 1; printf(" "), k++);
             printf("^\n");
             print_error_msg(NULL);
@@ -144,7 +143,7 @@ void parseEntry(Line *head) {
             int iniLen = strlen(estrdup("\nline : "));
             for(int n = p->number; n; n/=10, ++iniLen);
             octa dist =abs((octa)(p->line - errStr));
-            printf("\nline %d: %s\n",p->number,p->line);
+            printf("\nline %d: %s",p->number,p->line);
             for(int k = 0; k < dist + iniLen - 1; printf(" "), k++);
             printf("^\n");
             print_error_msg(NULL);

@@ -10,24 +10,6 @@
 // Array with all operators.
 static const int num_ops = 57;  // Number of operators.
 
-/*
-#define BYTE1        0x01  // One-byte number.
-#define REGISTER     0x20  // Register.
-#define IMMEDIATE    (REGISTER | BYTE1)  // Immediate constant.
-
-
-ADDR2
-BYTE2
-
-LABEL
-BYTE3
-ADDR3
-REGISTER | TETRABYTE | NEG_NUMBER
-REGISTER
-BYTE1
-STRING
-TETRABYTE | NEG_NUMBER
-*/
 static const Operator operators[] =
   {
     { .name = "ADD",  .opcode = ADD,  .opd_types = { REGISTER, REGISTER, IMMEDIATE } },
@@ -76,7 +58,7 @@ static const Operator operators[] =
     { .name = "SRU",  .opcode = SRU,  .opd_types = { REGISTER, REGISTER, IMMEDIATE } },
     { .name = "STB",  .opcode = STB,  .opd_types = { REGISTER, REGISTER, IMMEDIATE } },
     { .name = "STBU", .opcode = STBU, .opd_types = { REGISTER, REGISTER, IMMEDIATE } },
-    { .name = "STO",  .opcode = STO,  .opd_types = { REGISTER, REGISTER, IMMEDIATE } }, 
+    { .name = "STO",  .opcode = STO,  .opd_types = { REGISTER, REGISTER, IMMEDIATE } },
     { .name = "STOU", .opcode = STOU, .opd_types = { REGISTER, REGISTER, IMMEDIATE } },
     { .name = "STR",  .opcode = STR,  .opd_types = { STRING, OP_NONE, OP_NONE } },
     { .name = "STT",  .opcode = STT,  .opd_types = { REGISTER, REGISTER, IMMEDIATE } },
