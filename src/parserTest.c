@@ -118,7 +118,7 @@ void parseEntry(Line *head) {
             int iniLen = strlen(estrdup("\nline : "));
             for(int n = p->number; n; n/=10, ++iniLen);
             octa dist =abs((octa)(p->line - errStr));
-            printf("\nline %d: %s",p->number,p->line);
+            printf("\nline %d: %s\n",p->number,removeNL(p->line));
             for(int k = 0; k < dist + iniLen - 1; printf(" "), k++);
             printf("^\n");
             print_error_msg(NULL);
@@ -143,7 +143,7 @@ void parseEntry(Line *head) {
             int iniLen = strlen(estrdup("\nline : "));
             for(int n = p->number; n; n/=10, ++iniLen);
             octa dist =abs((octa)(p->line - errStr));
-            printf("\nline %d: %s",p->number,p->line);
+            printf("\nline %d: %s",p->number,removeNL(p->line));
             for(int k = 0; k < dist + iniLen - 1; printf(" "), k++);
             printf("^\n");
             print_error_msg(NULL);
