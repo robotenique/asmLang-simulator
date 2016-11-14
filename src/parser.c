@@ -488,7 +488,6 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
       oprds[i] = estrdup(tmp);
       tmp = strtok(NULL, ",");
   }
-
   if (commas != 2 || oprds[0] == NULL || oprds[1] == NULL || oprds[2] == NULL) {
     set_error_msg("Wrong number of operands!\n");
     errC -> pos = bs -> x;
@@ -500,7 +499,6 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
         errC -> pos = posErrOperands(errC -> or_String, bs -> x, 2);
     else if (oprds[2] == NULL)
         errC -> pos = posErrOperands(errC -> or_String, bs -> x, 3);
-    free(tmp);
     return NULL;
   }
   for (int i = 0; i < 3; i++) {
@@ -510,7 +508,6 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     if (spaces) {
       set_error_msg("Invalid operand found for operator %s!\n",op->name);
       errC -> pos = posErrOperands(errC -> or_String, bs -> x, i+1);
-      free(tmp);
       return NULL;
     }
   }
