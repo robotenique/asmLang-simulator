@@ -387,6 +387,7 @@ Operand **getOperands_1(BufferStorage* bs, errContainer *errC,
  */
 Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st){
+
   int i = 0;
   int commas = 0;
   // Count the commans in the operands
@@ -475,6 +476,7 @@ Operand **getOperands_2(BufferStorage* bs, errContainer *errC,
  */
 Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     const Operator* op, SymbolTable st){
+
   int i = 0;
   int commas = 0;
   // Count the commas of the operands string
@@ -491,7 +493,7 @@ Operand **getOperands_3(BufferStorage* bs, errContainer *errC,
     set_error_msg("Wrong number of operands!\n");
     errC -> pos = bs -> x;
     if (commas != 2)
-        errC -> pos = posErrOperands(errC -> or_String, strlen(errC -> or_String) - 1, 1);
+        errC -> pos = posErrOperands(errC -> or_String, 0, 3);
     else if (oprds[0] == NULL)
         errC -> pos = posErrOperands(errC -> or_String, bs -> x, 1);
     else if (oprds[1] == NULL)
@@ -890,14 +892,15 @@ int posErrOperands(char* source, int pos, int opNumber) {
 
   int commaPosition = 0;
 
-  while (commas != opNumber-1) {
+  int sz = strlen(source);
+
+  while (i < sz && commas != opNumber-1) {
     if (source[i] == ',') commas++, commaPosition = i; 
     i++;
   }
 
-  while (isspace(source[i])) i++;
+  while (i < sz && isspace(source[i])) i++;
 
-  int sz = strlen(source);
 
-  return i > sz-1 ? commaPosition : i;
+  return i > sz-1 ? (commaPosition == 0 ? sz-1: commaPosition) : i;
 }
