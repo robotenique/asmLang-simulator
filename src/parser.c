@@ -888,10 +888,16 @@ int posErrOperands(char* source, int pos, int opNumber) {
   int commas = 0;
   int i = pos;
 
-  while (commas != opNumber-1) if (source[i++] == ',') commas++;
+  int commaPosition = 0;
+
+  while (commas != opNumber-1) {
+    if (source[i] == ',') commas++, commaPosition = i; 
+    i++;
+  }
+
   while (isspace(source[i])) i++;
 
   int sz = strlen(source);
 
-  return i > sz-1 ? sz-1 : i;
+  return i > sz-1 ? commaPosition : i;
 }
