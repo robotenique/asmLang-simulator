@@ -66,8 +66,9 @@ int main(int argc, char const *argv[]) {
         }
         while (first->next != NULL) {
             lineCount++;
-            if(!isEmpty(trimComment(first->next->s)))
-                addLine(&head, trimComment(first->next->s), lineCount);
+            if(!isEmpty(trimComment(first->next->s))) {
+                addLine(&head,trimComment(first->next->s) , lineCount);
+            }
             first = first->next;
         }
         buffer_reset(B);

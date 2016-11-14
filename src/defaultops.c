@@ -66,9 +66,14 @@ char *trimSpc(char *c) {
 }
 char *trimComment(char *text) {
     int i;
+    char *tmp;
     for(i = 0; text[i] && text[i] != '*'; i++);
     if(text[i] == '*') text[i] = 0;
-    return estrdup(text);
+    tmp = estrdup(text);
+    for(i = 0; tmp[i]; i++)
+      if(tmp[i] == '\t')
+        tmp[i] = ' ';
+    return tmp;
 }
 
 
