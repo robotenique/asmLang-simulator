@@ -112,6 +112,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     iconf.label = false;
     iconf.operator = false;
     *instr = NULL;
+    isPseudo = false;
     //Add the string to the buffer
     for (i = 0; str[i]!=0; buffer_push_back(BS.B, str[i]), i++);
     buffer_push_back(BS.B, 0);
@@ -198,20 +199,12 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
                 *errptr = &(s[errC.pos]);
                 return 0;
             }
-            if (iconf.label) {
-                InsertionResult ir = stable_insert(alias_table, iconf.lb);
-                ir.data->opd = operand_create_label(iconf.lb);
-            }
         break;
         case 2:
             vOps = getOperands_2(&BS, &errC, iconf.opr, alias_table);
             if (vOps == NULL) {
                 *errptr = &(s[errC.pos]);
                 return 0;
-            }
-            if (iconf.label) {
-                InsertionResult ir = stable_insert(alias_table, iconf.lb);
-                ir.data->opd = operand_create_label(iconf.lb);
             }
         break;
         case 1:
@@ -231,24 +224,22 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
                     else
                         ir.data->opd = operand_create_number(vOps[0] -> value.num);
                 }
-                else
-                    ir.data->opd = operand_create_label(iconf.lb);
             }
         break;
         default:
             //NOP OPERATOR
-            if (iconf.label) {
-                InsertionResult ir = stable_insert(alias_table, iconf.lb);
-                ir.data->opd = operand_create_label(iconf.lb);
-            }
         break;
     }
-    // Creates the instruction
-    Instruction * newInst;
-    newInst = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
-    if(*instr != NULL)
-        (*instr)->next = newInst;
-    *instr = newInst;
+    // Creates the instruction if it's not a pseudo operator
+    if(iconf.opr->code == IS || iconf.opr->code == STR || iconf.opr->code == EXTERN)
+        isPseudo = true;
+    else {
+        Instruction * newInst;
+        newInst = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
+        if(*instr != NULL)
+            (*instr)->next = newInst;
+            *instr = newInst;
+    }
     return 1;
 }
 
@@ -892,7 +883,7 @@ int posErrOperands(char* source, int pos, int opNumber) {
   int sz = strlen(source);
 
   while (i < sz && commas != opNumber-1) {
-    if (source[i] == ',') commas++, commaPosition = i; 
+    if (source[i] == ',') commas++, commaPosition = i;
     i++;
   }
 

@@ -345,20 +345,3 @@ int checkLabels(SymbolTable st, Instruction *head) {
     }
     return -1;
 }
-
-/*
- * Function: insert
- * --------------------------------------------------------
- * Simple function to insert a new string into the tokens linked list.
- *
- * @args    ss: A string
- *
- * @return
- */
-void insert(char *ss) {
-    string *new = malloc(sizeof(string));
-    new -> s = estrdup(ss);
-    new -> next = NULL;
-    end -> next = new;
-    end = end -> next;
-}

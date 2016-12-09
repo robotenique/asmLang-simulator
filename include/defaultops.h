@@ -24,6 +24,8 @@ typedef struct node{
 string *end;
 string *first;
 
+bool isPseudo;
+
 bool isConditional(const Operator *op);
 char *trimSpc(char *s);
 char *cutSpc(char *text);
