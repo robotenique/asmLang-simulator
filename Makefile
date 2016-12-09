@@ -1,5 +1,5 @@
 #
-# Makefile para Parte 1 do projeto.
+# Makefile para Parte 3 do projeto.
 #
 
 CFLAGS = -Wall --std=c99 -O2
@@ -8,10 +8,10 @@ CFLAGS = -Wall --std=c99 -O2
 .PHONY: clean
 
 
-all: parser
+all: macas
 
 
-parser: macas.o buffer.o error.o optable.o parser.o asmtypes.o stable.o defaultops.o asm.o
+parser: macas.o asm.o buffer.o error.o optable.o parser.o asmtypes.o stable.o defaultops.o
 	$(CC) -o $@ $^
 
 
@@ -24,4 +24,4 @@ parser: macas.o buffer.o error.o optable.o parser.o asmtypes.o stable.o defaulto
 
 
 clean:
-	rm -f *.o *~ *.out parser
+	rm -f *.o *~ *.out macas

@@ -128,7 +128,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     }
 
     if (iAux->isLabel) {
-        // If there's error in adding the label, (TODO:) print ERROR
+        // If there's error in adding the label,
         // If the label is already in the symbol table, it's error
         if(containsLabel(alias_table, (iAux->val).label)) {
             set_error_msg("Label already defined!");
@@ -233,13 +233,12 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
     // Creates the instruction if it's not a pseudo operator
     if(iconf.opr->code == IS || iconf.opr->code == STR || iconf.opr->code == EXTERN)
         isPseudo = true;
-    else {
-        Instruction * newInst;
-        newInst = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
-        if(*instr != NULL)
-            (*instr)->next = newInst;
-            *instr = newInst;
-    }
+    Instruction * newInst;
+    newInst = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);
+    if(*instr != NULL)
+        (*instr)->next = newInst;
+        *instr = newInst;
+
     return 1;
 }
 

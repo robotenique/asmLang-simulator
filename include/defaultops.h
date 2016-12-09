@@ -24,6 +24,11 @@ typedef struct node{
 string *end;
 string *first;
 
+typedef struct {
+    char **str;
+    int i;
+} StrStorage;
+
 bool isPseudo;
 
 bool isConditional(const Operator *op);

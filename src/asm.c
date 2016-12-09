@@ -21,9 +21,18 @@
 #include "../include/defaultops.h"
 #include "../include/asm.h"
 
+
+
+/* Function Prototypes */
 void addLine(Line **head, char *line, int number);
 void evaluateText(Line *head);
+void insert(char *ss);
+bool isEmpty(char *str);
+bool isExternOk(SymbolTable extern_table, SymbolTable label_table);
+void destroyStables(SymbolTable a, SymbolTable b, SymbolTable c);
+char *removeNL(char *str);
 
+//TODO: Think what to do with the STR operation
 
 int assemble(const char *filename, FILE *input, FILE *output) {
     Buffer *B = buffer_create();
@@ -59,7 +68,6 @@ int assemble(const char *filename, FILE *input, FILE *output) {
 
 }
 
-
 void evaluateText(Line *head) {
     //Create the three symbol tables
     SymbolTable alias_table = stable_create();
@@ -67,11 +75,13 @@ void evaluateText(Line *head) {
     SymbolTable label_table = stable_create();
     InsertionResult ir;
     Instruction *instHEAD, *end, *ptr;
+    EntryData *ret;
     instHEAD = NULL;
     end = NULL;
     int parseResult;
     const char *errStr;
     Line *p, *ant;
+    bool gotHead = false;
     int posC = 1;
     // Insert the default labels into the symbol table
     ir = stable_insert(alias_table, "rA");
@@ -88,45 +98,53 @@ void evaluateText(Line *head) {
     ir.data->opd = operand_create_register(253);
     p = head;
     // Get the head of the linked list
-    if(p != NULL) {
-        parseResult =  parse(p->line, alias_table, &instHEAD, &errStr);
-        if(parseResult == 0) { //Print error
-            stable_destroy(st);
-            int iniLen = strlen(estrdup("\nline : "));
-            for(int n = p->number; n; n/=10, ++iniLen);
-            octa dist =abs((octa)(p->line - errStr));
-            printf("\nline %d: %s\n",p->number,removeNL(p->line));
-            for(int k = 0; k < dist + iniLen - 1; printf(" "), k++);
-            printf("^\n");
-            print_error_msg(NULL);
-            return;
-        }
-        // TODO: ADD label into the label_table, add extern into the extern table, etc
-        if(!isPseudo) {
-            instHEAD->lineno = p->number;
-            int opC = instHEAD->opr->opcode;
-            instHEAD->pos = posC;
-            if(instHEAD->label) {
-                ir = stable_insert(label_table, instHEAD->label);
-                if(ir == 0) {
-                    //TODO: ERROR, THE LABEL IS ALREADY DEFINED
-                    return;
+    while(!gotHead) {
+        if(p != NULL) {
+            parseResult =  parse(p->line, alias_table, &instHEAD, &errStr);
+            if(parseResult == 0) { //Print error
+                destroyStables(alias_table, extern_table, label_table);
+                int iniLen = strlen(estrdup("\nline : "));
+                for(int n = p->number; n; n/=10, ++iniLen);
+                octa dist =abs((octa)(p->line - errStr));
+                fprintf(stderr, "\nline %d: %s\n",p->number,removeNL(p->line));
+                for(int k = 0; k < dist + iniLen - 1; fprintf(stderr, " "), k++);
+                fprintf(stderr, "^\n");
+                print_error_msg(NULL);
+                return;
+            }
+            int opC = instHEAD->op->opcode;
+            if(!isPseudo) {
+                gotHead = true;
+                instHEAD->lineno = p->number;
+                instHEAD->pos = posC;
+                if(instHEAD->label) {
+                    ret = stable_find(alias_table, instHEAD->label);
+                    if(ret)
+                        die("Error on line %d: Label \"%s\" is already an alias!",
+                        instHEAD->lineno, instHEAD->label);
+                    ir = stable_insert(label_table, instHEAD->label);
+                    if(ir.new == 0) {
+                        die("Error on line %d: Label \"%s\" is already defined!",
+                        instHEAD->lineno, instHEAD->label);
+                    }
+                    ir.data->i = posC;
                 }
-                ir.data->i = posC;
+                if(opC == CALL)
+                    posC += 4;
+                else if(opC == PUSH)
+                    posC += 2;
+                else
+                    posC++;
             }
-            else if(opc == EXTERN) {
-                ir = stable_insert(extern_table, instHEAD->label);
+            else if(opC == EXTERN) {
+                ir = stable_insert(extern_table, instHEAD->opds[0]->value.label);
+                ir.data->i = 0; // No value
             }
+            if(isPseudo)
+            instr_destroy(instHEAD);
 
-            if(opC == CALL)
-                posC += 4;
-
-            else if(opC == PUSH)
-                posC += 2;
-            else
-                posC++;
+            p = p->next;
         }
-        p = p->next;
     }
     // The end has the same pointer as the head
     ptr = instHEAD;
@@ -137,52 +155,87 @@ void evaluateText(Line *head) {
      */
     for(; p; ant = p, p = p->next) {
         end = NULL;
-        parseResult =  parse(p->line, st, &end, &errStr);
+        parseResult =  parse(p->line, alias_table, &end, &errStr);
         if(parseResult == 0) {
-            printAllList(instHEAD, head, ant->number);
-            stable_destroy(st);
+            destroyStables(alias_table, extern_table, label_table);
             int iniLen = strlen(estrdup("\nline : "));
             for(int n = p->number; n; n/=10, ++iniLen);
             octa dist =abs((octa)(p->line - errStr));
-            printf("\nline %d: %s",p->number,removeNL(p->line));
-            for(int k = 0; k < dist + iniLen - 1; printf(" "), k++);
-            printf("^\n");
+            fprintf(stderr, "\nline %d: %s",p->number,removeNL(p->line));
+            for(int k = 0; k < dist + iniLen - 1; fprintf(stderr, " "), k++);
+            fprintf(stderr, "^\n");
             print_error_msg(NULL);
             return;
         }
-        else if(parseResult == 1 && !isPseudo) {
+        int opCode = end->op->opcode;
+        if(parseResult == 1 && !isPseudo) {
             ptr->next = end;
             ptr->next->lineno = p->number;
             ptr = end;
+            ptr->pos = posC;
+            if(ptr->label) {
+                ret = stable_find(alias_table, instHEAD->label);
+                if(ret)
+                    die("Error on line %d: Label \"%s\" is already an alias!",
+                    instHEAD->lineno, instHEAD->label);
+                ir = stable_insert(label_table, ptr->label);
+                if(ir.new == 0) {
+                    die("Error on line %d: Label \"%s\" is already defined!",
+                    instHEAD->lineno, instHEAD->label);
+                }
+                ir.data->i = posC;
+            }
+            if(opCode == CALL)
+                posC += 4;
+            else if(opCode == PUSH)
+                posC += 2;
+            else
+                posC++;
         }
+        else if(opCode == EXTERN) {
+            ir = stable_insert(extern_table, end->opds[0]->value.label);
+            ir.data->i = 0; // No value
+        }
+        if(isPseudo)
+            instr_destroy(instHEAD);
     }
 
-    // If there's no error, check if all the labels are in the SymbolTable!
-    int lineError = checkLabels(st, instHEAD);
-    /* If there's a label which is not defined, print all the parsing
-     * before the error, then print the line of the error and
-     * the error message.
-     */
-    if(lineError > 0) {
-        printAllList(instHEAD, head, lineError - 1);
-        for(p = head; p && p->number != lineError; p = p->next);
-        if(p)
-            printf("\nline %d: %s\n",p->number, removeNL(p->line));
+    // Check if all extern labels were defined
+    if(!isExternOk(extern_table, label_table)) {
         print_error_msg(NULL);
+        destroyStables(alias_table, extern_table, label_table);
+        return;
     }
-    else {
-        // If there's more than 1 line, print everything up until the line
-        if(ant)
-            printAllList(instHEAD, head, ant->number);
-        else //print the only line.
-            printAllList(instHEAD, head, 10);
-    }
+    //TODO: Unbranch the Instruction linked list
     stable_destroy(st);
-
 }
 
-
-
+/*
+ * Function: isExternOk
+ * --------------------------------------------------------
+ * Check if the labels exported via the EXTERN pseudo-operator were defined.
+ *
+ * @args    extern_table: A symbol table with the extern labels
+ *          label_table:  A symbol table with all the labels of the instructions
+ *
+ * @return  true if no error, false otherwise
+ */
+bool isExternOk(SymbolTable extern_table, SymbolTable label_table) {
+    StrStorage strS = stable_Keys(extern_table);
+    EntryData *ret, *ret2;
+    for(int i = 0; i < strS.i; i++) {
+        ret = stable_find(label_table, strS.str[i]);
+        if(ret) {
+            ret2 = stable_find(extern_table, strS.str[i]);
+            ret2->i = ret->i;
+        }
+        else {
+            set_error_msg("Extern label \"%s\" is never defined!", strS.str[i]);
+            return false;
+        }
+    }
+    return true;
+}
 
 /*
  * Function: insert
@@ -225,4 +278,47 @@ void  addLine(Line **head, char *line, int number) {
     else
         aux->next = new;
     new->next = NULL;
+}
+
+/*
+ * Function: isEmpty
+ * --------------------------------------------------------
+ * Check if a string is made of spaces only
+ *
+ * @args    str: A string
+ *
+ * @return true if the string has only spaces, false if not
+ */
+bool isEmpty(char *str) {
+    int len = strlen(str);
+    int i;
+    for(i = 0; str[i] && isspace(str[i]); i++);
+    if(i == len)
+        return true;
+    return false;
+}
+
+void destroyStables(SymbolTable a, SymbolTable b, SymbolTable c) {
+    stable_destroy(a);
+    stable_destroy(b);
+    stable_destroy(c);
+}
+
+/*
+ * Function: removeNL
+ * --------------------------------------------------------
+ * Remove the first '\n' from the ending of the string, and return it.
+ *
+ * @args    str: A string
+ *
+ * @return A string without a newline at the ending.
+ */
+char *removeNL(char *str) {
+    char *tmp = estrdup(str);
+    for(int i = strlen(tmp); i > 0; i--)
+        if(tmp[i] == '\n'){
+            tmp[i] = 0;
+            break;
+        }
+    return tmp;
 }

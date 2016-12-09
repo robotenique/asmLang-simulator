@@ -7,6 +7,7 @@
  * Symbol Table implementation
  */
  #include "../include/stable.h"
+ #include "../include/defaultops.h"
  #include "../include/error.h"
  #include <stdlib.h>
  #include <string.h>
@@ -17,6 +18,7 @@
      unsigned int i;
      unsigned int max;
  } stable_s;
+
  /*
    Return a new symbol table.
  */
@@ -133,3 +135,11 @@
                   return 0;
              return 1;
  }
+
+StrStorage stable_Keys(SymbolTable table) {
+    StrStorage strS;
+    strS.str = emalloc(table->i * sizeof(char*));
+    strS.i = table->i;
+    for(int i = 0; i < table->i; strS.str[i] = estrdup(table->keys[i]), i++);
+    return strS;
+}
