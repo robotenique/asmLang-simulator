@@ -8,7 +8,7 @@ CFLAGS = -Wall --std=c99 -O2
 .PHONY: clean
 
 
-all: macas
+all: asm
 
 
 parser: macas.o asm.o buffer.o error.o optable.o parser.o asmtypes.o stable.o defaultops.o
@@ -24,4 +24,4 @@ parser: macas.o asm.o buffer.o error.o optable.o parser.o asmtypes.o stable.o de
 
 
 clean:
-	rm -f *.o *~ *.out macas
+	rm -f *.o *~ *.out asm

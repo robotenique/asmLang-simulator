@@ -31,6 +31,7 @@ bool isEmpty(char *str);
 bool isExternOk(SymbolTable extern_table, SymbolTable label_table);
 void destroyStables(SymbolTable a, SymbolTable b, SymbolTable c);
 char *removeNL(char *str);
+void unbranchInstructions(SymbolTable label_table, Instruction *head);
 
 //TODO: Think what to do with the STR operation
 
@@ -207,7 +208,41 @@ void evaluateText(Line *head) {
         return;
     }
     //TODO: Unbranch the Instruction linked list
+    unbranchInstructions(label_table, instHEAD);
     stable_destroy(st);
+}
+
+/*
+ * Function: unbranchInstructions
+ * --------------------------------------------------------
+ * Remove the pseudo-operators (PUSH and CALL) from the list,
+ * and replace them with the full operations.
+ *
+ * @args    label_table : The symbol table with the labels
+ *          head: The linked list of Instructions
+ *
+ * @return
+ */
+void unbranchInstructions(SymbolTable label_table, Instruction *head) {
+    Instruction *p, *ant;
+    int opCode;
+    for(ant = NULL, p = head; ant = p, p = p->next) {
+        opCode = p->op->opcode;
+        /* Create an operand */
+        Operand **vOps;
+        vOps = emalloc(sizeof(Operand *));
+        for(int i = 0; i < 3; i++)
+            vOps[i] = NULL;
+        if(opCode == CALL) {
+            vOps[0] = operand_create_label("rZ");
+            vOps[1] = operand_create_number((octa)4);
+            instr_create(, optable_find("GETA"),vOps);
+        }
+        else if(opCode == PUSH) {
+
+        }
+    }
+
 }
 
 /*

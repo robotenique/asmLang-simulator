@@ -1,1 +1,3 @@
 AAAAAAAAAJJ21JKL       XOR              22,11,1,1
+
+gcc -Wall -Pedantic -O2 --std=c99 -o macas macas.c asm.c buffer.c error.c optable.c parser.c asmtypes.c stable.c defaultops.c
