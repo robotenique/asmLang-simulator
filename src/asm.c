@@ -230,16 +230,16 @@ void evaluateText(Line *head) {
 
         buffer_push_back(headerString, ' ');
 
-        char* stringNumber = emalloc(numDigits(integerToString(stable_find(label_table, strStor.str[i]) -> i)) + 1);
-        sprintf(stringNumber, "%d", integerToString(stable_find(label_table, strStor.str[i]) -> i));
+        char* stringNumber = emalloc(numDigits(stable_find(label_table, strStor.str[i]) -> i) + 1);
+        sprintf(stringNumber, "%d", stable_find(label_table, strStor.str[i]) -> i);
         for(int j=0;stringNumber[j];buffer_push_back(headerString,stringNumber[j]), j++);
         free(stringNumber);
 
         buffer_push_back(headerString, '\n');
     }
 
-    char* stringNumber = emalloc(numDigits(integerToString(stable_find(label_table, strStor.str[i]) -> i)) + 1);
-    sprintf(stringNumber, "%d", integerToString(qtdInstructions));
+    char* stringNumber = emalloc(numDigits(qtdInstructions) + 1);
+    sprintf(stringNumber, "%d", qtdInstructions);
     for(int i=0;stringNumber[i];buffer_push_back(headerString,stringNumber[i]), i++);
     free(stringNumber);
 
