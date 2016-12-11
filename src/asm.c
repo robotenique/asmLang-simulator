@@ -275,8 +275,8 @@ void unbranchInstructions(SymbolTable label_table, Instruction *head) {
             ant = ant->next;
 
             vOps[0] = operand_create_label("rSP");
-            vOps[0] = operand_create_label("rSP");
-            vOps[1] = operand_create_number((octa)8);
+            vOps[1] = operand_create_label("rSP");
+            vOps[2] = operand_create_number((octa)8);
             ant->next = instr_create(NULL, optable_find("ADDUI"), vOps);
 
             ant = ant->next;
