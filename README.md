@@ -1,8 +1,8 @@
 ---
 title:  Orientações -projeto de MAC0216-
-author: "Juliano Garcia de Oliveira e Enzo Hideki Nakamura"
+author: "Juliano Garcia de Oliveira e Enzo Hideki Nakamura e Allan Rocha"
 geometry: margin=3cm
-date: "13 de Novembro, 2016"
+date: "11 de Dezembro, 2016"
 ---
 
 ----------------------------------------------------------------------------------------------
@@ -11,7 +11,7 @@ date: "13 de Novembro, 2016"
 
 Para rodar o programa:
 
-No terminal, usar **$ make parser**, e depois rodar com  **$ ./parser 'nomeArquivo'**.
+No terminal, usar **$ make asm**, e depois rodar com  **$ ./parser 'nomeArquivo'**.
 
 
 Usar **$ make clean** para remover os arquivos binários / objetos.

@@ -34,6 +34,7 @@ bool isPseudo;
 typedef struct Node{
     char* code;
     int pos;
+    int size;
     struct Node* next;
 } ObjCode;
 
