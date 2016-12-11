@@ -11,7 +11,7 @@ CFLAGS = -Wall --std=c99 -O2
 all: asm
 
 
-parser: macas.o asm.o buffer.o error.o optable.o parser.o asmtypes.o stable.o defaultops.o
+parser: macas.o asm.o buffer.o error.o optable.o parser.o asmtypes.o stable.o defaultops.o translator.o
 	$(CC) -o $@ $^
 
 
