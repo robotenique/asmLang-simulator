@@ -31,6 +31,13 @@ typedef struct {
 
 bool isPseudo;
 
+typedef struct Node{
+    char* code;
+    int pos;
+    struct Node* next;
+} ObjCode;
+
+
 bool isConditional(const Operator *op);
 char *trimSpc(char *s);
 char *cutSpc(char *text);
