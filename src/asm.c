@@ -237,60 +237,50 @@ void unbranchInstructions(SymbolTable label_table, Instruction *head) {
         	/* GETA rZ,4 */
             vOps[0] = operand_create_label("rZ");
             vOps[1] = operand_create_number((octa)4);
-            Instruction* new = instr_create(NULL, optable_find("GETA"), vOps);
-            ant->next = new;
-            new->next = p->next;
+            ant->next = instr_create(NULL, optable_find("GETA"), vOps);
 
-            ant = ant->next, p = p->next;
+            ant = ant->next;
 
             /* STOUI rZ,rSP,0 */
             vOps[0] = operand_create_label("rZ");
             vOps[1] = operand_create_label("rSP");
             vOps[2] = operand_create_number((octa)0);
-            new = instr_create(NULL, optable_find("STOUI"), vOps);
-            ant->next = new;
-            new->next = p->next;
+            ant->next = instr_create(NULL, optable_find("STOUI"), vOps);
 
-            ant = ant->next, p = p->next;
+            ant = ant->next;
 
             /* ADDUI rSP,rSP,8 */
             vOps[0] = operand_create_label("rSP");
             vOps[1] = operand_create_label("rSP");
             vOps[2] = operand_create_number((octa)8);
-            new = instr_create(NULL, optable_find("ADDUI"), vOps);
-            ant->next = new;
-            new->next = p->next;
+            ant->next = instr_create(NULL, optable_find("ADDUI"), vOps);
 
-            ant = ant->next, p = p->next;
+            ant = ant->next;
 
             /* JMP[B] k */
             vOps[0] = operand_create_label(p->label);
             vOps[1] = NULL;
             vOps[2] = NULL;
-            new = instr_create(NULL, optable_find("JMP"), vOps);
-           	ant->next = new;
-            new->next = p->next;
+           	ant->next = instr_create(NULL, optable_find("JMP"), vOps);
 
-           	ant = ant->next, p = p->next;
+           	ant = ant->next;
+            ant->next = p->next;
         }
         else if(opCode == PUSH) {
         	vOps[0] = operand_create_register(p->opds[0]->value->str);
         	vOps[1] = operand_create_label("rSP");
             vOps[2] = operand_create_number((octa)0);
-            Instruction* new = instr_create(NULL, optable_find("STOUI"), vOps);
-            ant->next = new;
-            new->next = p->next;
+            ant->next = instr_create(NULL, optable_find("STOUI"), vOps);
 
-            ant = ant->next, p = p->next;
+            ant = ant->next;
 
             vOps[0] = operand_create_label("rSP");
             vOps[0] = operand_create_label("rSP");
             vOps[1] = operand_create_number((octa)8);
-            new = instr_create(NULL, optable_find("ADDUI"), vOps);
-            ant->next = new;
-            new->next = p->next;
+            ant->next = instr_create(NULL, optable_find("ADDUI"), vOps);
 
-            ant = ant->next, p = p->next;
+            ant = ant->next;
+            ant->next = p->next;
         }
 
         free(vOps);
