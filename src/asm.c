@@ -439,12 +439,31 @@ char *removeNL(char *str) {
     return tmp;
 }
 
-long long po(long long n, int e) {
+/*
+ * Function: power
+ * --------------------------------------------------------
+ * A function to compute a power given base and exponent
+ *
+ * @args    n: the base number
+ *          e: the exponent
+ *
+ * @return Returns the number corresponding to n^e
+ */
+long long power(long long n, int e) {
     long long prod = 1;
     for (int i = 0; i < e; i++) prod *= n;
     return prod;
 }
 
+/*
+ * Function: integerToString
+ * --------------------------------------------------------
+ * Convertes an integer to char pointer (string).
+ *
+ * @args    n: An integer
+ *
+ * @return A char pointer pointing to the first char of the converted string.
+ */
 char* integerToString(int n) {
     int len = 0;
     int naux = n;
@@ -453,7 +472,7 @@ char* integerToString(int n) {
     char* string = malloc(len + 1);
 
     for (int i=len; i>0; i--) {
-        string[len-i] = ((n/po(10,i-1))%10) + '0';
+        string[len-i] = ((n/power(10,i-1))%10) + '0';
     }
 
     string[len] = 0;
