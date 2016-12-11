@@ -8,6 +8,7 @@
 #define __STABLE_H__
 
 #include "asmtypes.h"
+#include "defaultops.h"
 
 // The symbol table.
 typedef struct stable_s *SymbolTable;
@@ -71,5 +72,7 @@ EntryData *stable_find(SymbolTable table, const char *key);
 int stable_visit(SymbolTable table,
                  int (*visit)(const char *key, EntryData *data));
 
+
+StrStorage stable_Keys(SymbolTable table);
 
 #endif
