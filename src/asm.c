@@ -32,6 +32,7 @@ bool isExternOk(SymbolTable extern_table, SymbolTable label_table);
 void destroyStables(SymbolTable a, SymbolTable b, SymbolTable c);
 char *removeNL(char *str);
 void unbranchInstructions(SymbolTable label_table, Instruction *head);
+char* integerToString(int n);
 
 //TODO: Think what to do with the STR operation
 
@@ -217,31 +218,31 @@ void evaluateText(Line *head) {
     Buffer* header = buffer_create();
     Buffer* headerString = buffer_create();
 
-    char stringNumber[5];
+    char* stringNumber;
 
     StrStorage strStor = stable_Keys(extern_table);
 
-    for (int i=0; i < (strStor->i); i++) {
+    for (int i=0; i < (strStor.i); i++) {
         buffer_push_back(headerString, 'E');
         buffer_push_back(headerString, ' ');
 
-        for(int i=0;strStor.str[i];buffer_push_back(headerString,strStor.str[i]), i++);
+        for(int j=0;strStor.str[i][j];buffer_push_back(headerString,strStor.str[i][j]), j++);
 
         buffer_push_back(headerString, ' ');
 
-        itoa(stable_find(label_table, strStor.str[i]) -> i, stringNumber, 10);
+        stringNumber = integerToString(stable_find(label_table, strStor.str[i]) -> i);
 
-        for(int i=0;stringNumber[i];buffer_push_back(headerString,stringNumber[i]), i++);
+        for(int j=0;stringNumber[j];buffer_push_back(headerString,stringNumber[j]), j++);
 
         buffer_push_back(headerString, '\n');
     }
 
-    itoa(qtdInstructions, stringNumber, 10);
+    stringNumber = integerToString(qtdInstructions);
     for(int i=0;stringNumber[i];buffer_push_back(headerString,stringNumber[i]), i++);
 
     buffer_push_back(headerString, '\n');
 
-    for(int i=0;headerString[i];buffer_push_back(header->data,headerString[i]), i++);
+    for(int i=0;headerString->data[i];buffer_push_back(header,headerString->data[i]), i++);
     //
 
     //TODO: Unbranch the Instruction linked list
@@ -263,7 +264,7 @@ void evaluateText(Line *head) {
 void unbranchInstructions(SymbolTable label_table, Instruction *head) {
     Instruction *p, *ant;
     int opCode;
-    for(ant = NULL, p = head; ant = p, p = p->next) {
+    for(ant = NULL, p = head; p; ant = p, p = p->next) {
         opCode = p->op->opcode;
         /* Create an operand */
         Operand **vOps;
@@ -304,7 +305,7 @@ void unbranchInstructions(SymbolTable label_table, Instruction *head) {
             ant->next = p->next;
         }
         else if(opCode == PUSH) {
-        	vOps[0] = operand_create_register(p->opds[0]->value->str);
+        	vOps[0] = operand_create_register(p->opds[0]->value.num);
         	vOps[1] = operand_create_label("rSP");
             vOps[2] = operand_create_number((octa)0);
             ant->next = instr_create(NULL, optable_find("STOU"), vOps);
@@ -436,4 +437,25 @@ char *removeNL(char *str) {
             break;
         }
     return tmp;
+}
+
+long long po(long long n, int e) {
+    long long prod = 1;
+    for (int i = 0; i < e; i++) prod *= n;
+    return prod;
+}
+
+char* integerToString(int n) {
+    int len = 0;
+    for (; n; n/=10, len++);
+
+    char* string = malloc(len + 1);
+
+    for (int i=len; i>0; i--) {
+        string[len-i] = ((n/po(10,i-1))%10) + '0';
+    }
+
+    string[len] = 0;
+
+    return string;
 }
