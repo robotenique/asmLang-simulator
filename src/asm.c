@@ -245,7 +245,7 @@ void unbranchInstructions(SymbolTable label_table, Instruction *head) {
             vOps[0] = operand_create_label("rZ");
             vOps[1] = operand_create_label("rSP");
             vOps[2] = operand_create_number((octa)0);
-            ant->next = instr_create(NULL, optable_find("STOUI"), vOps);
+            ant->next = instr_create(NULL, optable_find("STOU"), vOps);
 
             ant = ant->next;
 
@@ -253,7 +253,7 @@ void unbranchInstructions(SymbolTable label_table, Instruction *head) {
             vOps[0] = operand_create_label("rSP");
             vOps[1] = operand_create_label("rSP");
             vOps[2] = operand_create_number((octa)8);
-            ant->next = instr_create(NULL, optable_find("ADDUI"), vOps);
+            ant->next = instr_create(NULL, optable_find("ADDU"), vOps);
 
             ant = ant->next;
 
@@ -270,14 +270,14 @@ void unbranchInstructions(SymbolTable label_table, Instruction *head) {
         	vOps[0] = operand_create_register(p->opds[0]->value->str);
         	vOps[1] = operand_create_label("rSP");
             vOps[2] = operand_create_number((octa)0);
-            ant->next = instr_create(NULL, optable_find("STOUI"), vOps);
+            ant->next = instr_create(NULL, optable_find("STOU"), vOps);
 
             ant = ant->next;
 
             vOps[0] = operand_create_label("rSP");
             vOps[1] = operand_create_label("rSP");
             vOps[2] = operand_create_number((octa)8);
-            ant->next = instr_create(NULL, optable_find("ADDUI"), vOps);
+            ant->next = instr_create(NULL, optable_find("ADDU"), vOps);
 
             ant = ant->next;
             ant->next = p->next;
