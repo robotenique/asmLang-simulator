@@ -32,7 +32,7 @@ bool isExternOk(SymbolTable extern_table, SymbolTable label_table);
 void destroyStables(SymbolTable a, SymbolTable b, SymbolTable c);
 char *removeNL(char *str);
 void unbranchInstructions(SymbolTable label_table, Instruction *head);
-char* integerToString(int n);
+int numDigits(int n);
 
 //TODO: Think what to do with the STR operation
 
@@ -218,7 +218,7 @@ void evaluateText(Line *head) {
     Buffer* header = buffer_create();
     Buffer* headerString = buffer_create();
 
-    char* stringNumber;
+    
 
     StrStorage strStor = stable_Keys(extern_table);
 
@@ -230,15 +230,18 @@ void evaluateText(Line *head) {
 
         buffer_push_back(headerString, ' ');
 
-        stringNumber = integerToString(stable_find(label_table, strStor.str[i]) -> i);
-
+        char* stringNumber = emalloc(numDigits(integerToString(stable_find(label_table, strStor.str[i]) -> i)) + 1);
+        sprintf(stringNumber, "%d", integerToString(stable_find(label_table, strStor.str[i]) -> i));
         for(int j=0;stringNumber[j];buffer_push_back(headerString,stringNumber[j]), j++);
+        free(stringNumber);
 
         buffer_push_back(headerString, '\n');
     }
 
-    stringNumber = integerToString(qtdInstructions);
+    char* stringNumber = emalloc(numDigits(integerToString(stable_find(label_table, strStor.str[i]) -> i)) + 1);
+    sprintf(stringNumber, "%d", integerToString(qtdInstructions));
     for(int i=0;stringNumber[i];buffer_push_back(headerString,stringNumber[i]), i++);
+    free(stringNumber);
 
     buffer_push_back(headerString, '\n');
 
@@ -440,42 +443,16 @@ char *removeNL(char *str) {
 }
 
 /*
- * Function: power
+ * Function: numDigits
  * --------------------------------------------------------
- * A function to compute a power given base and exponent
- *
- * @args    n: the base number
- *          e: the exponent
- *
- * @return Returns the number corresponding to n^e
- */
-long long power(long long n, int e) {
-    long long prod = 1;
-    for (int i = 0; i < e; i++) prod *= n;
-    return prod;
-}
-
-/*
- * Function: integerToString
- * --------------------------------------------------------
- * Convertes an integer to char pointer (string).
+ * Gives number of digits of a number.
  *
  * @args    n: An integer
  *
- * @return A char pointer pointing to the first char of the converted string.
+ * @return The number of digits of n.
  */
-char* integerToString(int n) {
+int numDigits(int n) {
     int len = 0;
-    int naux = n;
-    for (; naux; naux/=10, len++);
-
-    char* string = malloc(len + 1);
-
-    for (int i=len; i>0; i--) {
-        string[len-i] = ((n/power(10,i-1))%10) + '0';
-    }
-
-    string[len] = 0;
-
-    return string;
+    for (; n; n/=10, len++);
+    return len;
 }
