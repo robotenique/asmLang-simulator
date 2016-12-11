@@ -12,7 +12,8 @@
 #include "../include/stable.h"
 #include "../include/defaultops.h"
 #include "../include/asm.h"
-ObjCode* createNewObjCode(const char* str, int pos);
+
+ObjCode* createNewObjCode(Instruction *ins, bool im);
 
 /*
  * Function: canBeImmediate
@@ -48,10 +49,42 @@ ObjCode* translateToObject(SymbolTable label_table, Instruction *head) {
     objHEAD->pos = 0;
     objHEAD->next = 0;
     for(p = head; p; p = p->next) {
-        isImmediate = canBeImmediate(p->op->opcode);
-        if(isImmediate && p->opds[2]->type == NUMBER_TYPE)
+        immediate = canBeImmediate(p->op->opcode);
+        // Check if we need to change the opCode
+        if(immediate && p->opds[2]->type == NUMBER_TYPE)
+            objHEAD->next = createNewObjCode(p, true);
         else
     }
 
 
+}
+
+//TODO: REMOVE DEBUGS
+ObjCode* createNewObjCode(Instruction *ins, bool im) {
+    ObjCode* obCode;
+    obCode = emalloc(sizeof(ObjCode));
+    obCode->code = emalloc(9*sizeof(char));
+    obCode->pos = ins->pos;
+    obCode->next = 0;
+    // All immediate operators have 3 operands
+    if(canBeImmediate(ins->op->opcode) || im) {
+        char* aux = emalloc(3);
+        // Print in 'aux' the operator code
+        if(im)
+            sprintf(aux, "%02x",(ins->op->opcode + 1));
+        else
+            sprintf(aux, "%02x", ins->op->opcode);
+        strcat(obCode->code, aux);
+        for(int i = 0; i < 3; i++) {
+            switch (ins->opds[i]->type) {
+                case REGISTER:
+                    break;
+                case NUMBER_TYPE:
+                    break;
+                default:
+                    printf("ERROOOOOOOOOOOUUUUUUUUUUUUUUUUUUUUUU\n");
+            }
+        }
+
+    }
 }
