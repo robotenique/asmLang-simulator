@@ -214,26 +214,34 @@ void evaluateText(Line *head) {
 
     //Draft
     //header -> data eh a string final do header
-    Buffer header;
-    header -> n = 200;
-    header -> i = 0;
-    header -> data = malloc(header -> n);
+    Buffer* header = buffer_create();
+    Buffer* headerString = buffer_create();
 
-    char headerString[200];
-    char stringLineNumber[5];
+    char stringNumber[5];
 
-    for (int i=0; i < (extern_table->i); i++) {
-        strcat(headerString, "E ");
-        strcat(headerString, extern_table->values[i]); 
-        strcat(headerString, " ");
-        strcat(headerString, stable_find(label_table, extern_table->values[i]->str) -> i);
-        strcat(headerString, "\n");
+    StrStorage strStor = stable_Keys(extern_table);
+
+    for (int i=0; i < (strStor->i); i++) {
+        buffer_push_back(headerString, 'E');
+        buffer_push_back(headerString, ' ');
+
+        for(int i=0;strStor.str[i];buffer_push_back(headerString,strStor.str[i]), i++);
+
+        buffer_push_back(headerString, ' ');
+
+        itoa(stable_find(label_table, strStor.str[i]) -> i, stringNumber, 10);
+
+        for(int i=0;stringNumber[i];buffer_push_back(headerString,stringNumber[i]), i++);
+
+        buffer_push_back(headerString, '\n');
     }
 
-    itoa(qtdInstructions, stringLineNumber, 10);
-    strcat(header->data, stringLineNumber);
-    strcat(header->data, "\n");
-    strcat(header->data, headerString);
+    itoa(qtdInstructions, stringNumber, 10);
+    for(int i=0;stringNumber[i];buffer_push_back(headerString,stringNumber[i]), i++);
+
+    buffer_push_back(headerString, '\n');
+
+    for(int i=0;headerString[i];buffer_push_back(header->data,headerString[i]), i++);
     //
 
     //TODO: Unbranch the Instruction linked list
