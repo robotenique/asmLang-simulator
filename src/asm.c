@@ -100,6 +100,11 @@ void evaluateText(Line *head) {
     p = head;
     // Get the head of the linked list
     while(!gotHead) {
+        Buffer header;
+        header -> n = 100;
+        header -> i = 0;
+        header -> data = malloc(header -> n);
+
         if(p != NULL) {
             parseResult =  parse(p->line, alias_table, &instHEAD, &errStr);
             if(parseResult == 0) { //Print error
@@ -141,6 +146,17 @@ void evaluateText(Line *head) {
                 ir = stable_insert(extern_table, instHEAD->opds[0]->value.label);
                 ir.data->i = 0; // No value
             }
+
+            // Draft
+            if(isPseudo && instHEAD->op->opcode == EXTERN) {
+                strcat(header -> data, "E ");
+                strcat(header -> data, instHEAD->label); 
+                strcat(header -> data, " ");
+                strcat(header -> data, instHEAD->pos);
+                strcat(header -> data, "\n");
+            }
+            //
+
             if(isPseudo)
             instr_destroy(instHEAD);
 
@@ -197,6 +213,17 @@ void evaluateText(Line *head) {
             ir = stable_insert(extern_table, end->opds[0]->value.label);
             ir.data->i = 0; // No value
         }
+
+        // Draft
+        if(isPseudo && ptr->op->opcode == EXTERN) {
+            strcat(header -> data, "E ");
+            strcat(header -> data, ptr->label); 
+            strcat(header -> data, " ");
+            strcat(header -> data, ptr->pos);
+            strcat(header -> data, "\n");
+        }
+        //
+
         if(isPseudo)
             instr_destroy(instHEAD);
     }
