@@ -151,11 +151,13 @@ void evaluateText(Line *head) {
     // The end has the same pointer as the head
     ptr = instHEAD;
     ant = p;
+    int qtdInstructions = 0;
     /* Get the parse result of each list. If there's an immediate error,
      * It stops the parsing and print the error, along with all the elements
      * before the error.
      */
     for(; p; ant = p, p = p->next) {
+        qtdInstructions++;
         end = NULL;
         parseResult =  parse(p->line, alias_table, &end, &errStr);
         if(parseResult == 0) {
@@ -211,29 +213,36 @@ void evaluateText(Line *head) {
     }
 
     //Draft
+    //header -> data eh a string final do header
     Buffer header;
-    header -> n = 100;
+    header -> n = 200;
     header -> i = 0;
     header -> data = malloc(header -> n);
 
     Instruction* auxInst = NULL;
 
-    int linenumber;
+    int lineNumber;
 
-    for (p = instHEAD, linenumber = 0; p != NULL; p = p->next, linenumber++) {
+    char headerString[200];
+    char stringLineNumber[5];
+
+    for (p = instHEAD, lineNumber = 0; p != NULL; p = p->next, lineNumber++) {
         parse(p->line, alias_table, &auxInst, &errStr);
 
         if(isPseudo && auxInst->label != NULL && stable_find(extern_table, auxInst->label)) {
-            char stringlinenumber[5];
-            itoa(linenumber, stringlinenumber, 10);
+            itoa(lineNumber, stringLineNumber, 10);
 
-            strcat(header -> data, "E ");
-            strcat(header -> data, auxInst->label); 
-            strcat(header -> data, " ");
-            strcat(header -> data, stringlinenumber);
-            strcat(header -> data, "\n");
+            strcat(headerString, "E ");
+            strcat(headerString, auxInst->label); 
+            strcat(headerString, " ");
+            strcat(headerString, stringLineNumber);
+            strcat(headerString, "\n");
         }
     }
+
+    itoa(lineNumber, stringLineNumber, 10);
+    strcat(header->data, stringLineNumber);
+    strcat(header->data, headerString);
     //
 
     //TODO: Unbranch the Instruction linked list
