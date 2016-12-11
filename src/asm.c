@@ -141,6 +141,7 @@ void evaluateText(Line *head) {
                 ir = stable_insert(extern_table, instHEAD->opds[0]->value.label);
                 ir.data->i = 0; // No value
             }
+
             if(isPseudo)
             instr_destroy(instHEAD);
 
@@ -150,11 +151,13 @@ void evaluateText(Line *head) {
     // The end has the same pointer as the head
     ptr = instHEAD;
     ant = p;
+    int qtdInstructions = 0;
     /* Get the parse result of each list. If there's an immediate error,
      * It stops the parsing and print the error, along with all the elements
      * before the error.
      */
     for(; p; ant = p, p = p->next) {
+        qtdInstructions++;
         end = NULL;
         parseResult =  parse(p->line, alias_table, &end, &errStr);
         if(parseResult == 0) {
@@ -197,6 +200,7 @@ void evaluateText(Line *head) {
             ir = stable_insert(extern_table, end->opds[0]->value.label);
             ir.data->i = 0; // No value
         }
+
         if(isPseudo)
             instr_destroy(instHEAD);
     }
@@ -207,6 +211,40 @@ void evaluateText(Line *head) {
         destroyStables(alias_table, extern_table, label_table);
         return;
     }
+
+    //Draft
+    //header -> data eh a string final do header
+    Buffer header;
+    header -> n = 200;
+    header -> i = 0;
+    header -> data = malloc(header -> n);
+
+    Instruction* auxInst = NULL;
+
+    int lineNumber;
+
+    char headerString[200];
+    char stringLineNumber[5];
+
+    for (p = instHEAD, lineNumber = 0; p != NULL; p = p->next, lineNumber++) {
+        parse(p->line, alias_table, &auxInst, &errStr);
+
+        if(isPseudo && auxInst->label != NULL && stable_find(extern_table, auxInst->label)) {
+            itoa(lineNumber, stringLineNumber, 10);
+
+            strcat(headerString, "E ");
+            strcat(headerString, auxInst->label); 
+            strcat(headerString, " ");
+            strcat(headerString, stringLineNumber);
+            strcat(headerString, "\n");
+        }
+    }
+
+    itoa(lineNumber, stringLineNumber, 10);
+    strcat(header->data, stringLineNumber);
+    strcat(header->data, headerString);
+    //
+
     //TODO: Unbranch the Instruction linked list
     unbranchInstructions(label_table, instHEAD);
     stable_destroy(st);
