@@ -83,7 +83,7 @@ void evaluateText(Line *head) {
     const char *errStr;
     Line *p, *ant;
     bool gotHead = false;
-    int posC = 1;
+    int posC = 0;
     // Insert the default labels into the symbol table
     ir = stable_insert(alias_table, "rA");
     ir.data->opd = operand_create_register(255);
