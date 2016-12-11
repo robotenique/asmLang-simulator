@@ -219,28 +219,18 @@ void evaluateText(Line *head) {
     header -> i = 0;
     header -> data = malloc(header -> n);
 
-    Instruction* auxInst = NULL;
-
-    int lineNumber;
-
     char headerString[200];
     char stringLineNumber[5];
 
-    for (p = instHEAD, lineNumber = 0; p != NULL; p = p->next, lineNumber++) {
-        parse(p->line, alias_table, &auxInst, &errStr);
-
-        if(isPseudo && auxInst->label != NULL && stable_find(extern_table, auxInst->label)) {
-            itoa(lineNumber, stringLineNumber, 10);
-
-            strcat(headerString, "E ");
-            strcat(headerString, auxInst->label); 
-            strcat(headerString, " ");
-            strcat(headerString, stringLineNumber);
-            strcat(headerString, "\n");
-        }
+    for (int i=0; i < (extern_table->i); i++) {
+        strcat(headerString, "E ");
+        strcat(headerString, extern_table->values[i]); 
+        strcat(headerString, " ");
+        strcat(headerString, stable_find(label_table, extern_table->values[i]->str) -> i);
+        strcat(headerString, "\n");
     }
 
-    itoa(lineNumber, stringLineNumber, 10);
+    itoa(qtdInstructions, stringLineNumber, 10);
     strcat(header->data, stringLineNumber);
     strcat(header->data, "\n");
     strcat(header->data, headerString);
