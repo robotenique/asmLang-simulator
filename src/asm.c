@@ -242,6 +242,7 @@ void evaluateText(Line *head) {
 
     itoa(lineNumber, stringLineNumber, 10);
     strcat(header->data, stringLineNumber);
+    strcat(header->data, "\n");
     strcat(header->data, headerString);
     //
 
