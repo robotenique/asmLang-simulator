@@ -231,7 +231,7 @@ int parse(const char *s, SymbolTable alias_table, Instruction **instr,
         break;
     }
     // Creates the instruction if it's not a pseudo operator
-    if(iconf.opr->code == IS || iconf.opr->code == STR || iconf.opr->code == EXTERN)
+    if(iconf.opr->opcode == IS || iconf.opr->opcode == STR || iconf.opr->opcode == EXTERN)
         isPseudo = true;
     Instruction * newInst;
     newInst = instr_create(str = iconf.label ? iconf.lb : NULL, iconf.opr, vOps);

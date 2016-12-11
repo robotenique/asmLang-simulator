@@ -250,7 +250,7 @@ void evaluateText(Line *head) {
 
     //TODO: Unbranch the Instruction linked list
     unbranchInstructions(label_table, instHEAD);
-    stable_destroy(st);
+    destroyStables(alias_table, extern_table, label_table);
 }
 
 /*
