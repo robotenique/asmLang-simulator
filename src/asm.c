@@ -447,7 +447,8 @@ long long po(long long n, int e) {
 
 char* integerToString(int n) {
     int len = 0;
-    for (; n; n/=10, len++);
+    int naux = n;
+    for (; naux; naux/=10, len++);
 
     char* string = malloc(len + 1);
 
