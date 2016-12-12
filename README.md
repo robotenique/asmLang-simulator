@@ -11,7 +11,7 @@ date: "11 de Dezembro, 2016"
 
 Para rodar o programa:
 
-No terminal, usar **$ make asm**, e depois rodar com  **$ ./parser 'nomeArquivo'**.
+No terminal, usar **$ make macas**, e depois rodar com  **$ ./asm 'nomeArquivo'**.
 
 
 Usar **$ make clean** para remover os arquivos binários / objetos.

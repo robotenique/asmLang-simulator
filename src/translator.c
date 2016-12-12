@@ -132,9 +132,8 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
                     sprintf(aux, "%02llx", ins->opds[i]->value.num);
                     break;
                 default:
-                    printf("%s\n",ins->op->name);
-                    printf("ERROOOOOOOOOOOUUUUUUUUUUUUUUUUUUUUUU\n");
-                    exit(-1);
+                    sprintf(aux, "%02llx", 99);
+
             }
             strcat(obCode->code, aux);
         }

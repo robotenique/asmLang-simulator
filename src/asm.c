@@ -26,7 +26,7 @@
 
 /* Function Prototypes */
 void addLine(Line **head, char *line, int number);
-void evaluateText(Line *head);
+void evaluateText(Line *head, FILE *output);
 void insert(char *ss);
 bool isEmpty(char *str);
 bool isExternOk(SymbolTable extern_table, SymbolTable label_table);
@@ -64,13 +64,13 @@ int assemble(const char *filename, FILE *input, FILE *output) {
         }
         buffer_reset(B);
     }
-    evaluateText(head);
+    evaluateText(head, output);
     buffer_destroy(B);
     return 0;
 
 }
 
-void evaluateText(Line *head) {
+void evaluateText(Line *head, FILE *output) {
     //Create the three symbol tables
     SymbolTable alias_table = stable_create();
     SymbolTable extern_table = stable_create();
@@ -251,13 +251,12 @@ void evaluateText(Line *head) {
     buffer_push_back(header, '\n');
     //
 
-    printf("%s",headerString->data);
-    //TODO: Unbranch the Instruction linked list
-    instHEAD = unbranchInstructions(label_table, instHEAD);
+    fprintf(output,"%s",headerString->data);
+    //instHEAD = unbranchInstructions(label_table, instHEAD);
     ObjCode *maco =  translateToObject(label_table, instHEAD);
     ObjCode *k;
     for(k=maco->next;k;k=k->next) {
-        printf("%s\n",k->code);
+        fprintf(output,"%s\n",k->code);
     }
     destroyStables(alias_table, extern_table, label_table);
 }
