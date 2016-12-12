@@ -37,7 +37,7 @@ int read_word(const char *line, Buffer *B)
 }
 
 FILE **openFiles(int argc, char *argv[])
-{   
+{   /*Abre todos os 'argc' arquivos de nomes contidos em 'argv'.*/
     FILE *inputs[] = emalloc((argc - 1)*sizeof(FILE *));
     for (int i = 1; i < argc; i++)
         if (!(inputs[i-1] = fopen(argv[i], "r"))) return NULL;
@@ -46,7 +46,7 @@ FILE **openFiles(int argc, char *argv[])
 }
 
 char *what_jmp(char *word)
-{
+{   /*Verifica qual o código correspondente ao JMP específico contido em 'word.'*/
     if (!strcmp(word, "JMP")) return "48"
     else if (!strcmp(word, "JZ")) return "4a"
     else if (!strcmp(word, "JNZ")) return "4c"
