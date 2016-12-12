@@ -14,6 +14,8 @@ all: macas
 macas: macas.o asm.o buffer.o error.o optable.o parser.o asmtypes.o stable.o defaultops.o translator.o
 	$(CC) -o $@ $^
 
+maclk: maclk.o asm.o buffer.o error.o optable.o parser.o asmtypes.o stable.o defaultops.o translator.o
+	$(CC) -o $@ $^
 
 %.o: src/%.c include/%.h
 	$(CC) $(CFLAGS) -c $< -o $@

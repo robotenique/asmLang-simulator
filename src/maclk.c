@@ -11,9 +11,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "buffer.h"
-#include "error.h"
-#include "stable.h"
+#include "../include/buffer.h"
+#include "../include/error.h"
+#include "../include/stable.h"
 
 int read_word(const char *line, Buffer *B)
 {   /*Read a word from the 'line' and put it in the buffer 'B'. Return the size
@@ -138,16 +138,16 @@ int main(int argc, char *argv[])
                     read_word(*line->data[2+wordlen+1+3], word);
                 }
                 else read_word(*line->data[6], word);
-                
+
                 jmp = 0; /*Sinaliza se há um extern relacionado ao JMP pendente.*/
-                
+
                 /*Procura o rótulo para o qual o fluxo do programa desviará.*/
                 for (int i = 0; i < argc - 1 && !jmp; i++) {
                     if (i == k) continue; /*Ignora o JMP pro próprio código-objeto.*/
 
                     inputs[i] = fopen(argv[i+1], "r");
                     while (read_line(inputs[i], line) && line->data[0] != 'E');
-                    
+
                     /*Verifica se o rótulo está no código-objeto desta iteração.*/
                     do {
                         read_word(line->data[2], wordtmp);
@@ -203,7 +203,7 @@ int main(int argc, char *argv[])
         }
         numline = 0;
     }
-    
+
     buffer_destroy(word);
     buffer_destroy(wordtmp);
     buffer_destroy(wordline);

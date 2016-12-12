@@ -9,13 +9,6 @@ date: "11 de Dezembro, 2016"
 
 ###Utilização
 
-Para rodar o programa:
-
-No terminal, usar **$ make macas**, e depois rodar com  **$ ./asm 'nomeArquivo'**.
-
-
-Usar **$ make clean** para remover os arquivos binários / objetos.
-
 Para rodar o programa macas:
 
 No terminal, usar **$ make macas**, e depois rodar com  **$ ./macas 'nomeArquivo'**.
@@ -29,9 +22,10 @@ No terminal, usar **$ ./maclk out main.maco arq1.maco arq2.maco ...**, onde "out
 
 Os arquivos principais implementados são o *parser.c*, o *parserTest.c* e o *defaultops.c*. Para melhor leitura do código, é recomendado um bom editor como o **Atom**, que permite executar *code folding* rapidamente. Por exemplo, selecionar todo o código e depois usar *ctrl + alt + shift + [* para dar *folding* em todo o arquivo, e depois ir de função em função.
 
-O parser implementado verifica, além dos erros usuais, o erro quando a *label* do **EXTERN** não é definida no programa, como o **./macas** também faz. O parser que implementamos também detecta erros que o **./macas** não detectava, como por exemplo a linha **SUB $1,$1, 12 222 3 3 23**, que claramente está errada mas o **./macas** ignora.
+**OBS: Por falta de tempo o maclk não foi terminado (ele não compila, faltou consertar os erros finais)!! Porém
+o ./macas funcionou nos testes que fizemos (infelizmente foram poucos testes! :(  )**
 
-A tabela de símbolos foi trocada para uma implementação usando vetores (a mesma enviada anteriormente).
+
 
 O vinculador funciona restrito a seguinte especificação: o primeiro e o segundo argumento devem ser, respectivamente, o arquivo de saída e o arquivo onde se encontra a main.
 
