@@ -14,6 +14,7 @@
 #include "../include/asm.h"
 
 ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table);
+ObjCode* getJumpObj(Instruction *ins, SymbolTable label_table);
 
 /*
  * Function: isJump
@@ -75,36 +76,40 @@ bool isSpecial(int OPCODE) {
 }
 
 
-
 ObjCode* translateToObject(SymbolTable label_table, Instruction *head) {
     Instruction *p;
-    bool isImmediate;
+    bool immediate;
     //Create a dummy-head linked list
     ObjCode *h;
-    objHEAD = emalloc(sizeof(ObjCode));
-    objHEAD->code = estrdup("NULL");
-    objHEAD->pos = 0;
-    objHEAD->next = 0;
+    h = emalloc(sizeof(ObjCode));
+    h->code = estrdup("NULL");
+    h->pos = 0;
+    h->next = 0;
     for(p = head; p; p = p->next) {
         immediate = canBeImmediate(p->op->opcode);
         // Check if we need to change the opCode
         if(immediate && p->opds[2]->type == NUMBER_TYPE)
-            objHEAD->next = createNewObjCode(p, true);
+            h->next = createNewObjCode(p, true, label_table);
         else
+            h->next = createNewObjCode(p, false, label_table);
     }
-
-
+    return h;
 }
 
 //TODO: REMOVE DEBUGS
 ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
     char* aux;
+    int num = 0;
+    EntryData *ret;
     ObjCode* obCode;
     obCode = emalloc(sizeof(ObjCode));
     obCode->code = emalloc(9*sizeof(char));
     obCode->size = 9;
     obCode->pos = ins->pos;
     obCode->next = 0;
+
+    if(im)
+        num++;
 
     // All immediate operators have 3 operands!
     if(canBeImmediate(ins->op->opcode) || im) {
@@ -119,10 +124,10 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
             aux[0] = 0;
             switch (ins->opds[i]->type) {
                 case REGISTER:
-                    sprintf(aux, "%02x", ins->opds[i]->value.reg)
+                    sprintf(aux, "%02x", ins->opds[i]->value.reg);
                     break;
                 case NUMBER_TYPE:
-                    sprintf(aux, "%02x", ins->opds[i]->value.num)
+                    sprintf(aux, "%02llx", ins->opds[i]->value.num);
                     break;
                 default:
                     printf("ERROOOOOOOOOOOUUUUUUUUUUUUUUUUUUUUUU\n");
@@ -143,7 +148,7 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
             case INT:
                 aux = emalloc(7);
                 obCode->code = estrdup("fe");
-                sprintf(aux, "%06x", ins->opds[0]->value.num);
+                sprintf(aux, "%06llx", ins->opds[0]->value.num);
                 strcat(obCode->code, aux);
                 free(aux);
                 return obCode;
@@ -154,7 +159,7 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
                 strcat(obCode->code, aux);
                 free(aux);
                 aux = emalloc(5);
-                sprintf(aux, "%04x", ins->opds[1]->value.num);
+                sprintf(aux, "%04llx", ins->opds[1]->value.num);
                 strcat(obCode->code, aux);
                 free(aux);
                 return obCode;
@@ -165,7 +170,7 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
         strcat(obCode->code, aux);
         for(int i = 0; i < 3; i++) {
             aux[0] = 0;
-            sprintf(aux, "%02x", ins->opds[i]->value.reg)
+            sprintf(aux, "%02x", ins->opds[i]->value.reg);
             strcat(obCode->code, aux);
         }
         free(aux);
@@ -176,7 +181,6 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
     if(isJump(ins->op->opcode)) {
         switch (ins->op->opcode) {
             case JMP:
-                EntryData* ret;
                 if(ins->opds[0]->type == LABEL) {
                     ret = stable_find(label_table, ins->opds[0]->value.label);
                     //Label is defined
@@ -220,7 +224,7 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
                         sprintf(aux, "%02x",ins->opds[0]->value.reg);
                         if(ret->i >= ins->pos) {
                             obCode->code = estrdup("56");
-                            strcat(obCode, aux);
+                            strcat(obCode->code, aux);
                             aux = emalloc(5);
                             sprintf(aux, "%04x", ret->i - ins->pos);
                         }
@@ -250,7 +254,7 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
                     return obCode;
                 }
                 // Is a number, so we check whether it's GO or GOB
-                int num = ins->opds[0]->value.num;
+                num = ins->opds[0]->value.num;
                 obCode->code = (num >= 0) ? estrdup("56") : estrdup("57");
                 aux = emalloc(3);
                 sprintf(aux, "%02x",ins->opds[0]->value.reg);
@@ -297,7 +301,7 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
                     return obCode;
                 }
                 // Is a number, so we check whether it's GETA or GETAB
-                int num = ins->opds[0]->value.num;
+                num = ins->opds[0]->value.num;
                 obCode->code = (num >= 0) ? estrdup("58") : estrdup("59");
                 aux = emalloc(3);
                 sprintf(aux, "%02x",ins->opds[0]->value.reg);
@@ -312,12 +316,16 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
                 return getJumpObj(ins, label_table);
         }
     }
+
+
+    printf("QUEM SERA QUE FOI??????????????????????WW\n");
+    exit(-1);
 }
 
 ObjCode* getJumpObj(Instruction *ins, SymbolTable label_table) {
     char *aux, *aux2;
     ObjCode* ob;
-    obCode = emalloc(sizeof(ObjCode));
+    ob = emalloc(sizeof(ObjCode));
     ob->code = emalloc(9*sizeof(char));
     ob->pos = ins->pos;
     ob->next = 0;
@@ -346,7 +354,7 @@ ObjCode* getJumpObj(Instruction *ins, SymbolTable label_table) {
             strcat(ob->code, aux);
             free(aux);
             free(aux2);
-            return obCode;
+            return ob;
         }
         // The label isn't defined, i'll store in the correct format
         free(ob->code);
@@ -370,9 +378,11 @@ ObjCode* getJumpObj(Instruction *ins, SymbolTable label_table) {
     else
         sprintf(aux, "%02x", ins->op->opcode + 1);
 
-    strcat(ob->code, )
-
-
-
-
+    strcat(ob->code, aux);
+    sprintf(aux, "%02x", ins->opds[0]->value.reg);
+    strcat(ob->code, aux);
+    aux = emalloc(5);
+    sprintf(aux, "%04llx", ins->opds[1]->value.num);
+    free(aux);
+    return ob;
 }

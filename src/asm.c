@@ -214,11 +214,11 @@ void evaluateText(Line *head) {
     }
 
     //Draft
-    //header -> data eh a string final do header
+    //header -> data contains the 'extern' header
     Buffer* header = buffer_create();
     Buffer* headerString = buffer_create();
 
-    
+
 
     StrStorage strStor = stable_Keys(extern_table);
 
@@ -250,6 +250,8 @@ void evaluateText(Line *head) {
 
     //TODO: Unbranch the Instruction linked list
     unbranchInstructions(label_table, instHEAD);
+    ObjCode *maco =  translateToObject(label_table, instHEAD);
+
     destroyStables(alias_table, extern_table, label_table);
 }
 
