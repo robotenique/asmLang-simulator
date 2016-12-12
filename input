@@ -1,6 +1,15 @@
-EXTERN    main
-hello STR       "Hello World!\n"
-main  GETA      $0,hello
-PUSH      $0
-CALL      puts
-INT       0
+EXTERN puts
+s       IS     $0
+ADDU $0,$1,233
+LDOU   s,s,0
+SETW   rX,2
+write   LDB    rY,s,0
+JZ     rY,end
+INT    #80
+puts    SUBU   s,rSP,16 *Loads the first char addr in s
+JMP PARECE
+GETA rZ, QUE
+JZ rY,FUNCIONA
+ADDU   s,s,1  *Next char
+JMP    write
+end     INT 0

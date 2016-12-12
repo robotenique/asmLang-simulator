@@ -85,13 +85,15 @@ ObjCode* translateToObject(SymbolTable label_table, Instruction *head) {
     h->code = estrdup("NULL");
     h->pos = 0;
     h->next = 0;
+    ObjCode *haux = h;
     for(p = head; p; p = p->next) {
         immediate = canBeImmediate(p->op->opcode);
         // Check if we need to change the opCode
         if(immediate && p->opds[2]->type == NUMBER_TYPE)
-            h->next = createNewObjCode(p, true, label_table);
+            haux->next = createNewObjCode(p, true, label_table);
         else
-            h->next = createNewObjCode(p, false, label_table);
+            haux->next = createNewObjCode(p, false, label_table);
+        haux = haux->next;
     }
     return h;
 }

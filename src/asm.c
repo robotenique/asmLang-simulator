@@ -214,6 +214,7 @@ void evaluateText(Line *head) {
         return;
     }
 
+    printf("LOL\n");
     //Draft
     //header -> data contains the 'extern' header
     Buffer* header = buffer_create();
@@ -222,7 +223,6 @@ void evaluateText(Line *head) {
 
 
     StrStorage strStor = stable_Keys(extern_table);
-
     for (int i=0; i < (strStor.i); i++) {
         buffer_push_back(headerString, 'E');
         buffer_push_back(headerString, ' ');
@@ -249,8 +249,9 @@ void evaluateText(Line *head) {
     for(int i=0;headerString->data[i];buffer_push_back(header,headerString->data[i]), i++);
     //
 
+    printf("%s",headerString->data);
     //TODO: Unbranch the Instruction linked list
-    unbranchInstructions(label_table, instHEAD);
+    //unbranchInstructions(label_table, instHEAD);
     ObjCode *maco =  translateToObject(label_table, instHEAD);
     ObjCode *k;
     for(k=maco->next;k;k=k->next) {
