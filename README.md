@@ -24,5 +24,9 @@ O parser implementado verifica, além dos erros usuais, o erro quando a *label* 
 
 A tabela de símbolos foi trocada para uma implementação usando vetores (a mesma enviada anteriormente).
 
+O vinculador funciona restrito a algumas específicações, tais como:
+	- O código-objeto onde se encontra a "main" não deve ter mais de uma label como EXTERN.
+	- O primeiro e o segundo argumento devem ser, respectivamente, o arquivo de saída e o arquivo onde se encontra a main.
+	- Fora a main, os códigos-objeto não devem ter um JMP para outro código-objeto.
 
 ----------------------------------------------------------------------------------------------
