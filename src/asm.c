@@ -248,9 +248,7 @@ void evaluateText(Line *head, FILE *output) {
     //
 
     for (int i=0; i<header->i; i++) printf("%c",header->data[i]);
-
-    fprintf(output,"%s",headerString->data);
-    instHEAD = unbranchInstructions(label_table, instHEAD);
+    for (int i=0; i<header->i; i++) fprintf(output, "%c",header->data[i]);
     ObjCode *maco =  translateToObject(label_table, instHEAD);
     ObjCode *k;
     for(k=maco->next;k;k=k->next) {
