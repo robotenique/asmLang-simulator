@@ -241,7 +241,7 @@ void evaluateText(Line *head) {
 
     char* stringNumber = emalloc(numDigits(qtdInstructions) + 1);
     sprintf(stringNumber, "%d", qtdInstructions);
-    for(int i=0;stringNumber[i];buffer_push_back(headerString,stringNumber[i]), i++);
+    for(int i=0;stringNumber[i];buffer_push_back(header,stringNumber[i]), i++);
     free(stringNumber);
 
     buffer_push_back(headerString, '\n');
