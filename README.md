@@ -16,6 +16,15 @@ No terminal, usar **$ make asm**, e depois rodar com  **$ ./parser 'nomeArquivo'
 
 Usar **$ make clean** para remover os arquivos binários / objetos.
 
+Para rodar o programa macas:
+
+No terminal, usar **$ make macas**, e depois rodar com  **$ ./macas 'nomeArquivo'**.
+Isso faz com que ele gere um arquivo.maco.
+
+Para rodar o programa maclk:
+
+No terminal, usar **$ ./maclk out main.maco arq1.maco arq2.maco ...**, onde "out" é o arquivo de saída do programa.
+
 ###Comentários
 
 Os arquivos principais implementados são o *parser.c*, o *parserTest.c* e o *defaultops.c*. Para melhor leitura do código, é recomendado um bom editor como o **Atom**, que permite executar *code folding* rapidamente. Por exemplo, selecionar todo o código e depois usar *ctrl + alt + shift + [* para dar *folding* em todo o arquivo, e depois ir de função em função.
@@ -25,5 +34,9 @@ O parser implementado verifica, além dos erros usuais, o erro quando a *label* 
 A tabela de símbolos foi trocada para uma implementação usando vetores (a mesma enviada anteriormente).
 
 O vinculador funciona restrito a seguinte especificação: o primeiro e o segundo argumento devem ser, respectivamente, o arquivo de saída e o arquivo onde se encontra a main.
+
+###GRUPO ANTIGO
+
+O integrante Allan Rocha fazia parte de um grupo com o Igor Fratel e o Yuji Murata. Devido a desmonoramento do grupo, o Allan Rocha se integrou ao grupo do Juliano Garcia e Enzo Hideki.
 
 ----------------------------------------------------------------------------------------------
