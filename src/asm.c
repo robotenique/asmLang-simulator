@@ -20,6 +20,7 @@
 #include "../include/stable.h"
 #include "../include/defaultops.h"
 #include "../include/asm.h"
+#include "../include/translator.h"
 
 
 
@@ -251,7 +252,10 @@ void evaluateText(Line *head) {
     //TODO: Unbranch the Instruction linked list
     unbranchInstructions(label_table, instHEAD);
     ObjCode *maco =  translateToObject(label_table, instHEAD);
-
+    ObjCode *k;
+    for(k=maco->next;k;k=k->next) {
+        printf("%s\n",k->code);
+    }
     destroyStables(alias_table, extern_table, label_table);
 }
 
