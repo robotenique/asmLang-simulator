@@ -37,6 +37,6 @@ O vinculador funciona restrito a seguinte especificação: o primeiro e o segund
 
 ###GRUPO ANTIGO
 
-O integrante Allan Rocha fazia parte de um grupo com o Igor Fratel e o Yuji Murata. Devido a desmonoramento do grupo, o Allan Rocha se integrou ao grupo do Juliano Garcia e Enzo Hideki.
+O integrante Allan Rocha fazia parte de um grupo com o Igor Fratel e o Yuji Murata. Devido a desmoronamento do grupo, o Allan Rocha se integrou ao grupo do Juliano Garcia e Enzo Hideki.
 
 ----------------------------------------------------------------------------------------------
