@@ -132,6 +132,7 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
                     sprintf(aux, "%02llx", ins->opds[i]->value.num);
                     break;
                 default:
+                    printf("%s\n",ins->op->name);
                     printf("ERROOOOOOOOOOOUUUUUUUUUUUUUUUUUUUUUU\n");
                     exit(-1);
             }
@@ -318,10 +319,7 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
                 return getJumpObj(ins, label_table);
         }
     }
-
-    printf("QUEM SERA QUE FOI??????????????????????WW\n");
-    printf(".%s.\n",ins->op->name);
-    exit(-1);
+    obCode->code = estrdup("00000000");
 }
 
 ObjCode* getJumpObj(Instruction *ins, SymbolTable label_table) {

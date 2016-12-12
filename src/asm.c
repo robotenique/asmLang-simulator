@@ -32,7 +32,7 @@ bool isEmpty(char *str);
 bool isExternOk(SymbolTable extern_table, SymbolTable label_table);
 void destroyStables(SymbolTable a, SymbolTable b, SymbolTable c);
 char *removeNL(char *str);
-void unbranchInstructions(SymbolTable label_table, Instruction *head);
+Instruction* unbranchInstructions(SymbolTable label_table, Instruction *head);
 int numDigits(int n);
 
 //TODO: Think what to do with the STR operation
@@ -67,7 +67,6 @@ int assemble(const char *filename, FILE *input, FILE *output) {
     evaluateText(head);
     buffer_destroy(B);
     return 0;
-
 
 }
 
@@ -254,7 +253,7 @@ void evaluateText(Line *head) {
 
     printf("%s",headerString->data);
     //TODO: Unbranch the Instruction linked list
-    //unbranchInstructions(label_table, instHEAD);
+    instHEAD = unbranchInstructions(label_table, instHEAD);
     ObjCode *maco =  translateToObject(label_table, instHEAD);
     ObjCode *k;
     for(k=maco->next;k;k=k->next) {
@@ -274,7 +273,7 @@ void evaluateText(Line *head) {
  *
  * @return
  */
-void unbranchInstructions(SymbolTable label_table, Instruction *head) {
+Instruction* unbranchInstructions(SymbolTable label_table, Instruction *head) {
     Instruction *p, *ant;
     int opCode;
     Operand **vOps = emalloc(sizeof(Operand *));
@@ -333,10 +332,8 @@ void unbranchInstructions(SymbolTable label_table, Instruction *head) {
             ant = ant->next;
             ant->next = p->next;
         }
-
-        printf("BUGOU\n");
     }
-
+    return head;
 }
 
 /*
