@@ -273,13 +273,13 @@ void evaluateText(Line *head) {
 void unbranchInstructions(SymbolTable label_table, Instruction *head) {
     Instruction *p, *ant;
     int opCode;
+    Operand **vOps = emalloc(sizeof(Operand *));
+    for(int i = 0; i < 3; i++)
+        vOps[i] = NULL;
     for(ant = NULL, p = head; p; ant = p, p = p->next) {
         opCode = p->op->opcode;
         /* Create an operand */
-        Operand **vOps;
-        vOps = emalloc(sizeof(Operand *));
-        for(int i = 0; i < 3; i++)
-            vOps[i] = NULL;
+
         if(opCode == CALL) {
         	/* GETA rZ,4 */
             vOps[0] = operand_create_label("rZ");
@@ -330,7 +330,7 @@ void unbranchInstructions(SymbolTable label_table, Instruction *head) {
             ant->next = p->next;
         }
 
-        free(vOps);
+        printf("BUGOU\n");
     }
 
 }
