@@ -246,6 +246,9 @@ void evaluateText(Line *head) {
     buffer_push_back(headerString, '\n');
 
     for(int i=0;headerString->data[i];buffer_push_back(header,headerString->data[i]), i++);
+    buffer_push_back(header, '\n');
+    buffer_push_back(header, 'B');
+    buffer_push_back(header, '\n');
     //
 
     printf("%s",headerString->data);
