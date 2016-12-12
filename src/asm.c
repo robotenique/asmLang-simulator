@@ -218,23 +218,21 @@ void evaluateText(Line *head, FILE *output) {
     Buffer* header = buffer_create();
     Buffer* headerString = buffer_create();
 
-
-
     StrStorage strStor = stable_Keys(extern_table);
     for (int i=0; i < (strStor.i); i++) {
         buffer_push_back(headerString, 'E');
         buffer_push_back(headerString, ' ');
 
-        for(int j=0;strStor.str[i][j];buffer_push_back(headerString,strStor.str[i][j]), j++);
+        for(int j=0;strStor.str[i][j]; buffer_push_back(headerString,strStor.str[i][j]), j++);
 
         buffer_push_back(headerString, ' ');
 
         char* stringNumber = emalloc(numDigits(stable_find(label_table, strStor.str[i]) -> i) + 1);
         sprintf(stringNumber, "%d", stable_find(label_table, strStor.str[i]) -> i);
-        for(int j=0;stringNumber[j];buffer_push_back(headerString,stringNumber[j]), j++);
+        for(int j=0;stringNumber[j]; buffer_push_back(headerString,stringNumber[j]), j++);
         free(stringNumber);
-
         buffer_push_back(headerString, '\n');
+
     }
 
     char* stringNumber = emalloc(numDigits(qtdInstructions) + 1);
@@ -242,13 +240,14 @@ void evaluateText(Line *head, FILE *output) {
     for(int i=0;stringNumber[i];buffer_push_back(header,stringNumber[i]), i++);
     free(stringNumber);
 
-    buffer_push_back(headerString, '\n');
-
-    for(int i=0;headerString->data[i];buffer_push_back(header,headerString->data[i]), i++);
     buffer_push_back(header, '\n');
+
+    for(int i=0; i < headerString->i; buffer_push_back(header,headerString->data[i]), i++);
     buffer_push_back(header, 'B');
     buffer_push_back(header, '\n');
     //
+
+    for (int i=0; i<header->i; i++) printf("%c",header->data[i]);
 
     fprintf(output,"%s",headerString->data);
     instHEAD = unbranchInstructions(label_table, instHEAD);
