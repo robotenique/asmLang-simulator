@@ -132,7 +132,8 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
                     sprintf(aux, "%02llx", ins->opds[i]->value.num);
                     break;
                 default:
-                    sprintf(aux, "%02llx", 99);
+                    sprintf(aux, "%02llx",(octa)99);
+                    break;
 
             }
             strcat(obCode->code, aux);
@@ -318,7 +319,9 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
                 return getJumpObj(ins, label_table);
         }
     }
+    // Invalid Instruction
     obCode->code = estrdup("00000000");
+    return obCode;
 }
 
 ObjCode* getJumpObj(Instruction *ins, SymbolTable label_table) {

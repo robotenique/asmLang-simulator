@@ -179,7 +179,6 @@ void evaluateText(Line *head, FILE *output) {
             ptr = end;
             ptr->pos = posC;
             if(ptr->label) {
-                printf("UAUA K forte (%s) \n",end->label);
                 ret = stable_find(alias_table, end->label);
                 if(ret)
                     die("Error on line %d: Label \"%s\" is already an alias!",
