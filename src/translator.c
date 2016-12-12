@@ -319,8 +319,8 @@ ObjCode* createNewObjCode(Instruction *ins, bool im, SymbolTable label_table) {
         }
     }
 
-
     printf("QUEM SERA QUE FOI??????????????????????WW\n");
+    printf(".%s.\n",ins->op->name);
     exit(-1);
 }
 

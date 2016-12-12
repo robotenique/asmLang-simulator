@@ -145,8 +145,7 @@ void evaluateText(Line *head) {
             }
 
             if(isPseudo)
-            instr_destroy(instHEAD);
-
+                instr_destroy(instHEAD);
             p = p->next;
         }
     }
@@ -158,7 +157,7 @@ void evaluateText(Line *head) {
      * It stops the parsing and print the error, along with all the elements
      * before the error.
      */
-    for(; p; ant = p, p = p->next) {
+    for(;p; ant = p, p = p->next) {
         qtdInstructions++;
         end = NULL;
         parseResult =  parse(p->line, alias_table, &end, &errStr);
@@ -173,6 +172,7 @@ void evaluateText(Line *head) {
             print_error_msg(NULL);
             return;
         }
+
         int opCode = end->op->opcode;
         if(parseResult == 1 && !isPseudo) {
             ptr->next = end;
@@ -180,14 +180,15 @@ void evaluateText(Line *head) {
             ptr = end;
             ptr->pos = posC;
             if(ptr->label) {
-                ret = stable_find(alias_table, instHEAD->label);
+                printf("UAUA K forte (%s) \n",end->label);
+                ret = stable_find(alias_table, end->label);
                 if(ret)
                     die("Error on line %d: Label \"%s\" is already an alias!",
-                    instHEAD->lineno, instHEAD->label);
-                ir = stable_insert(label_table, ptr->label);
+                    end->lineno, end->label);
+                ir = stable_insert(label_table, end->label);
                 if(ir.new == 0) {
                     die("Error on line %d: Label \"%s\" is already defined!",
-                    instHEAD->lineno, instHEAD->label);
+                    end->lineno, end->label);
                 }
                 ir.data->i = posC;
             }
@@ -214,7 +215,6 @@ void evaluateText(Line *head) {
         return;
     }
 
-    printf("LOL\n");
     //Draft
     //header -> data contains the 'extern' header
     Buffer* header = buffer_create();
