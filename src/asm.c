@@ -306,7 +306,7 @@ void unbranchInstructions(SymbolTable label_table, Instruction *head) {
             ant = ant->next;
 
             /* JMP[B] k */
-            vOps[0] = operand_create_label(p->label);
+            vOps[0] = operand_create_label(p->opds[0]->value.label);
             vOps[1] = NULL;
             vOps[2] = NULL;
            	ant->next = instr_create(NULL, optable_find("JMP"), vOps);
